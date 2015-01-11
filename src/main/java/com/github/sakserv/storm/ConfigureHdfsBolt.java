@@ -31,6 +31,7 @@ public class ConfigureHdfsBolt {
     private static final Logger LOG = Logger.getLogger(ConfigureHdfsBolt.class);
 
     public static void configureHdfsBolt(TopologyBuilder builder, String delimiter, String outputPath, String hdfsUri) {
+        
         LOG.info("HDFS: Configuring the HdfsBolt");
         RecordFormat format = new DelimitedRecordFormat().withFieldDelimiter(delimiter);
         SyncPolicy syncPolicy = new CountSyncPolicy(1000);

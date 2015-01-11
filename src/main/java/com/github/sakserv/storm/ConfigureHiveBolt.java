@@ -16,13 +16,18 @@ package com.github.sakserv.storm;
 
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
+import org.apache.log4j.Logger;
 import org.apache.storm.hive.bolt.HiveBolt;
 import org.apache.storm.hive.bolt.mapper.DelimitedRecordHiveMapper;
 import org.apache.storm.hive.common.HiveOptions;
 
 public class ConfigureHiveBolt {
 
+    private static final Logger LOG = Logger.getLogger(ConfigureHiveBolt.class);
+
     public static void configureHiveStreamingBolt(TopologyBuilder builder, String[] colNames, String[] partitionCol, String metastoreUri, String dbName, String tableName) {
+
+        LOG.info("HDFS: Configuring the HiveBolt");
 
         DelimitedRecordHiveMapper mapper = new DelimitedRecordHiveMapper()
                 .withColumnFields(new Fields(colNames))

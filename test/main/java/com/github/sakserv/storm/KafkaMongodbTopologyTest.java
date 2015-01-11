@@ -3,6 +3,7 @@ package com.github.sakserv.storm;
 import com.github.sakserv.minicluster.impl.KafkaLocalBroker;
 import com.github.sakserv.minicluster.impl.MongodbLocalServer;
 import com.github.sakserv.minicluster.impl.ZookeeperLocalCluster;
+import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,6 +12,9 @@ import org.junit.Test;
  * Created by skumpf on 1/8/15.
  */
 public class KafkaMongodbTopologyTest {
+
+    // Logger
+    private static final Logger LOG = Logger.getLogger(KafkaHiveHdfsTopologyTest.class);
     
     private ZookeeperLocalCluster zookeeperLocalCluster;
     private MongodbLocalServer mongodbLocalServer;

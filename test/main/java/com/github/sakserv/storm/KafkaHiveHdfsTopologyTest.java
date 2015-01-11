@@ -28,6 +28,7 @@ import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.ql.io.orc.OrcSerde;
 import org.apache.hadoop.hive.serde.Constants;
+import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 import org.codehaus.jettison.json.JSONException;
 import org.junit.After;
@@ -45,6 +46,9 @@ import java.util.List;
 import java.util.Map;
 
 public class KafkaHiveHdfsTopologyTest {
+    
+    // Logger
+    private static final Logger LOG = Logger.getLogger(KafkaHiveHdfsTopologyTest.class);
 
     // Kafka static
     private static final String DEFAULT_LOG_DIR = "embedded_kafka";
@@ -188,11 +192,11 @@ public class KafkaHiveHdfsTopologyTest {
 
         // Describe the table
         Table createdTable = hiveClient.getTable(HIVE_DB_NAME, HIVE_TABLE_NAME);
-        System.out.println("HIVE: Created Table: " + createdTable.toString());
+        LOG.info("HIVE: Created Table: " + createdTable.toString());
     }
 
     public void runStormKafkaHiveHdfsTopology() {
-        System.out.println("STORM: Starting Topology: " + TEST_TOPOLOGY_NAME);
+        LOG.info("STORM: Starting Topology: " + TEST_TOPOLOGY_NAME);
         TopologyBuilder builder = new TopologyBuilder();
         ConfigureKafkaSpout.configureKafkaSpout(builder, zkCluster.getZkConnectionString(), TEST_TOPIC, "-2");
         ConfigureHdfsBolt.configureHdfsBolt(builder, ",", HDFS_OUTPUT_DIR, hdfsCluster.getHdfsUriString());
@@ -201,9 +205,9 @@ public class KafkaHiveHdfsTopologyTest {
     }
 
     public void validateHiveResults() throws ClassNotFoundException, SQLException {
-        System.out.println("HIVE: VALIDATING");
+        LOG.info("HIVE: VALIDATING");
         // Load the Hive JDBC driver
-        System.out.println("HIVE: Loading the Hive JDBC Driver");
+        LOG.info("HIVE: Loading the Hive JDBC Driver");
         Class.forName("org.apache.hive.jdbc.HiveDriver");
 
         Connection con = DriverManager.getConnection("jdbc:hive2://localhost:" + hiveLocalServer2.getHiveServerThriftPort() + "/" + HIVE_DB_NAME, "user", "pass");
@@ -211,7 +215,7 @@ public class KafkaHiveHdfsTopologyTest {
         String selectStmt = "SELECT * FROM " + HIVE_TABLE_NAME;
         Statement stmt = con.createStatement();
 
-        System.out.println("HIVE: Running Select Statement: " + selectStmt);
+        LOG.info("HIVE: Running Select Statement: " + selectStmt);
         ResultSet resultSet = stmt.executeQuery(selectStmt);
         while (resultSet.next()) {
             ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
@@ -223,18 +227,18 @@ public class KafkaHiveHdfsTopologyTest {
     }
 
     public void validateHdfsResults() throws IOException {
-        System.out.println("HDFS: VALIDATING");
+        LOG.info("HDFS: VALIDATING");
         FileSystem hdfsFsHandle = hdfsCluster.getHdfsFileSystemHandle();
         RemoteIterator<LocatedFileStatus> listFiles = hdfsFsHandle.listFiles(new Path("/tmp/kafka_data"), true);
         while (listFiles.hasNext()) {
             LocatedFileStatus file = listFiles.next();
 
-            System.out.println("HDFS READ: Found File: " + file);
+            LOG.info("HDFS READ: Found File: " + file);
 
             BufferedReader br = new BufferedReader(new InputStreamReader(hdfsFsHandle.open(file.getPath())));
             String line = br.readLine();
             while (line != null) {
-                System.out.println("HDFS READ: Found Line: " + line);
+                LOG.info("HDFS READ: Found Line: " + line);
                 line = br.readLine();
             }
         }

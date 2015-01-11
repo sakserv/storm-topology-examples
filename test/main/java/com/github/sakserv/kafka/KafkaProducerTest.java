@@ -4,6 +4,7 @@ import com.github.sakserv.datetime.GenerateRandomDay;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
+import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -14,15 +15,14 @@ import java.util.Properties;
  */
 public class KafkaProducerTest {
 
+    private static final Logger LOG = Logger.getLogger(KafkaProducerTest.class);
+
     public static void produceMessages(String brokerList, String topic, int msgCount) throws JSONException {
         // Add Producer properties and created the Producer
-        Properties props = new Properties();
-        props.put("metadata.broker.list", brokerList);
-        props.put("serializer.class", "kafka.serializer.StringEncoder");
-        ProducerConfig config = new ProducerConfig(props);
+        ProducerConfig config = new ProducerConfig(setKafkaProps(brokerList));
         Producer<String, String> producer = new Producer<String, String>(config);
 
-        System.out.println("KAFKA: Preparing To Send " + msgCount + " Events.");
+        LOG.info("KAFKA: Preparing To Send " + msgCount + " Events.");
         for (int i=0; i<msgCount; i++){
 
             // Create the JSON object
@@ -34,11 +34,19 @@ public class KafkaProducerTest {
 
             KeyedMessage<String, String> data = new KeyedMessage<String, String>(topic, null, payload);
             producer.send(data);
-            System.out.println("Sent message: " + data.toString());
+            LOG.debug("Sent message: " + data.toString());
         }
-        System.out.println("KAFKA: Initial Messages Sent");
+        LOG.info("KAFKA: Sent " + msgCount + " Events.");
 
         // Stop the producer
         producer.close();
+    }
+    
+    private static Properties setKafkaProps(String brokerList) {
+
+        Properties props = new Properties();
+        props.put("metadata.broker.list", brokerList);
+        props.put("serializer.class", "kafka.serializer.StringEncoder");
+        return props;
     }
 }

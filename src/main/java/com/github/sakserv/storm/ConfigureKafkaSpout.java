@@ -17,6 +17,7 @@ package com.github.sakserv.storm;
 import backtype.storm.spout.SchemeAsMultiScheme;
 import backtype.storm.topology.TopologyBuilder;
 import com.github.sakserv.storm.scheme.JsonScheme;
+import org.apache.log4j.Logger;
 import storm.kafka.KafkaSpout;
 import storm.kafka.SpoutConfig;
 import storm.kafka.ZkHosts;
@@ -25,7 +26,11 @@ import java.util.UUID;
 
 public class ConfigureKafkaSpout {
 
+    private static final Logger LOG = Logger.getLogger(ConfigureKafkaSpout.class);
+
     public static void configureKafkaSpout(TopologyBuilder builder, String zkHostString, String kafkaTopic, String kafkaStartOffset) {
+
+        LOG.info("HDFS: Configuring the KafkaSpout");
 
         // Configure the KafkaSpout
         SpoutConfig spoutConfig = new SpoutConfig(new ZkHosts(zkHostString),
