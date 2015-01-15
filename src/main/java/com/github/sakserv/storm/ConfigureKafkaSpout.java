@@ -39,7 +39,16 @@ public class ConfigureKafkaSpout {
                 UUID.randomUUID().toString());  // ID for storing consumer offsets in Zookeeper
         //spoutConfig.scheme = new SchemeAsMultiScheme(new StringScheme());
         spoutConfig.scheme = new SchemeAsMultiScheme(new JsonScheme());
+        setKafkaOffset(spoutConfig, kafkaStartOffset);
+        
+        KafkaSpout kafkaSpout = new KafkaSpout(spoutConfig);
 
+        // Add the spout and bolt to the topology
+        builder.setSpout("kafkaspout", kafkaSpout, 1);
+
+    }
+    
+    public static void setKafkaOffset(SpoutConfig spoutConfig, String kafkaStartOffset) {
         // Allow for passing in an offset time
         // startOffsetTime has a bug that ignores the special -2 value
         if(kafkaStartOffset == "-2") {
@@ -47,10 +56,6 @@ public class ConfigureKafkaSpout {
         } else if (kafkaStartOffset != null) {
             spoutConfig.startOffsetTime = Long.parseLong(kafkaStartOffset);
         }
-        KafkaSpout kafkaSpout = new KafkaSpout(spoutConfig);
-
-        // Add the spout and bolt to the topology
-        builder.setSpout("kafkaspout", kafkaSpout, 1);
-
+        
     }
 }
