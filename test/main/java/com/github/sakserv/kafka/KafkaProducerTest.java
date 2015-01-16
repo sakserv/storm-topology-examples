@@ -34,7 +34,7 @@ public class KafkaProducerTest {
 
             KeyedMessage<String, String> data = new KeyedMessage<String, String>(topic, null, payload);
             producer.send(data);
-            LOG.debug("Sent message: " + data.toString());
+            LOG.info("Sent message: " + data.toString());
         }
         LOG.info("KAFKA: Sent " + msgCount + " Events.");
 
