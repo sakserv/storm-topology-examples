@@ -46,6 +46,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.thewonggei</groupId>
+            <artifactId>regex-tester</artifactId>
+            <version>0.1</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.sakserv</groupId>
             <artifactId>hadoop-mini-clusters</artifactId>
             <version>0.0.8</version>

@@ -7,7 +7,10 @@ import com.github.sakserv.minicluster.impl.KafkaLocalBroker;
 import com.github.sakserv.minicluster.impl.MongodbLocalServer;
 import com.github.sakserv.minicluster.impl.StormLocalCluster;
 import com.github.sakserv.minicluster.impl.ZookeeperLocalCluster;
-import com.mongodb.*;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.MongoClient;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.junit.After;
@@ -15,7 +18,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.net.UnknownHostException;
-import java.util.Date;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
+import static com.thewonggei.regexTester.hamcrest.RegexMatches.doesMatchRegex;
 
 /**
  * Created by skumpf on 1/8/15.
@@ -30,7 +38,10 @@ public class KafkaMongodbTopologyTest {
     private static final String TEST_TOPIC = "test-topic";
     private static final Integer KAFKA_PORT = 9092;
     private static final String LOCALHOST_BROKER = "localhost:" + KAFKA_PORT.toString();
-    private static final Integer BROKER_ID = 1;
+    private static final int BROKER_ID = 1;
+    private static final int DEFAULT_NUM_MESSAGES = 50;
+    private static final String DEFAULT_OFFSET = "-2";
+    private static final String DEFAULT_KAFKA_MSG_PAYLOAD = "test-message1";
 
     // MongoDB static
     private static final String DEFAULT_MONGODB_DATABASE_NAME = "test_database";
@@ -81,41 +92,60 @@ public class KafkaMongodbTopologyTest {
     public void runStormKafkaMongodbTopology() {
         LOG.info("STORM: Starting Topology: " + TEST_TOPOLOGY_NAME);
         TopologyBuilder builder = new TopologyBuilder();
-        ConfigureKafkaSpout.configureKafkaSpout(builder, zookeeperLocalCluster.getZkConnectionString(), TEST_TOPIC, "-2");
+        ConfigureKafkaSpout.configureKafkaSpout(builder, zookeeperLocalCluster.getZkConnectionString(), 
+                TEST_TOPIC, DEFAULT_OFFSET);
         ConfigureMongodbBolt.configureMongodbBolt(builder, mongodbLocalServer.getBindIp(), 
                 mongodbLocalServer.getBindPort(), DEFAULT_MONGODB_DATABASE_NAME, DEFAULT_MONGODB_COLLECTION_NAME);
         stormCluster.submitTopology(TEST_TOPOLOGY_NAME, new Config(), builder.createTopology());
     }
     
     public void validateMongo() throws UnknownHostException {
-        MongoClient mongo = new MongoClient(DEFAULT_MONGODB_IP, DEFAULT_MONGOD_PORT);
+        MongoClient mongo = getMongoClient(DEFAULT_MONGODB_IP, DEFAULT_MONGOD_PORT);
+        DB db = getMongoDb(mongo, DEFAULT_MONGODB_DATABASE_NAME);
+        DBCollection collection = getMongoCollection(db, DEFAULT_MONGODB_COLLECTION_NAME);
 
-        DB db = mongo.getDB(DEFAULT_MONGODB_DATABASE_NAME);
-        DBCollection col = db.getCollection(DEFAULT_MONGODB_COLLECTION_NAME);
-        
-        LOG.info("MONGODB: Number of items in collection: " + col.count());
+        LOG.info("MONGODB: Number of items in collection: " + collection.count());
+        assertEquals(DEFAULT_NUM_MESSAGES, collection.count());
 
-        DBCursor cursor = col.find();
+        DBCursor cursor = collection.find();
+        int counter = 0;
         while(cursor.hasNext()) {
-            LOG.info("MONGODB: Document output: " + cursor.next());
+            Map msg = cursor.next().toMap();
+            assertEquals(counter, Integer.parseInt(msg.get("id").toString()));
+            assertEquals(DEFAULT_KAFKA_MSG_PAYLOAD, msg.get("msg").toString());
+            assertThat(msg.get("dt").toString(), doesMatchRegex("\\d{4}-\\d{2}-\\d{2}"));
+            counter++;
+            LOG.info("MONGODB: Document output: " + msg);
         }
         cursor.close();
+    }
+    
+    public MongoClient getMongoClient(String mongodbIp, int mongodbPort) throws UnknownHostException {
+        return new MongoClient(mongodbIp, mongodbPort);
+    }
+    
+    public DB getMongoDb(MongoClient mongo, String mongoDatabaseName) {
+        return mongo.getDB(mongoDatabaseName);
+    }
+    
+    public DBCollection getMongoCollection(DB mongoDatabase, String mongoCollection) {
+        return mongoDatabase.getCollection(mongoCollection);
     }
     
     @Test
     public void testKafkaMongodbTopology() throws JSONException, UnknownHostException {
 
-        KafkaProducerTest.produceMessages(LOCALHOST_BROKER, TEST_TOPIC, 50);
+        KafkaProducerTest.produceMessages(LOCALHOST_BROKER, TEST_TOPIC, DEFAULT_NUM_MESSAGES);
         runStormKafkaMongodbTopology();
         try {
-            Thread.sleep(10000L);
+            Thread.sleep(5000L);
         } catch (InterruptedException e) {
             System.exit(1);
         }
         
         validateMongo();
         try {
-            Thread.sleep(10000L);
+            Thread.sleep(5000L);
         } catch (InterruptedException e) {
             System.exit(1);
         }
