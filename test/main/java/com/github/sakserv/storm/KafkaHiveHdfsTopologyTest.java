@@ -19,6 +19,7 @@ import backtype.storm.topology.TopologyBuilder;
 import com.github.sakserv.kafka.KafkaProducerTest;
 import com.github.sakserv.minicluster.impl.*;
 import com.github.sakserv.minicluster.util.FileUtils;
+import com.github.sakserv.storm.scheme.JsonScheme;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
@@ -198,7 +199,8 @@ public class KafkaHiveHdfsTopologyTest {
     public void runStormKafkaHiveHdfsTopology() {
         LOG.info("STORM: Starting Topology: " + TEST_TOPOLOGY_NAME);
         TopologyBuilder builder = new TopologyBuilder();
-        ConfigureKafkaSpout.configureKafkaSpout(builder, zkCluster.getZkConnectionString(), TEST_TOPIC, "-2");
+        ConfigureKafkaSpout.configureKafkaSpout(builder, zkCluster.getZkConnectionString(), TEST_TOPIC, "-2", 1, 
+                "kafkaspout", new JsonScheme());
         ConfigureHdfsBolt.configureHdfsBolt(builder, ",", HDFS_OUTPUT_DIR, hdfsCluster.getHdfsUriString());
         ConfigureHiveBolt.configureHiveStreamingBolt(builder, HIVE_COLS, HIVE_PARTITIONS, hiveLocalMetaStore.getMetaStoreUri(), HIVE_DB_NAME, HIVE_TABLE_NAME);
         stormCluster.submitTopology(TEST_TOPOLOGY_NAME, new Config(), builder.createTopology());

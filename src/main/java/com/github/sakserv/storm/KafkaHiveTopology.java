@@ -17,6 +17,7 @@ package com.github.sakserv.storm;
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
+import com.github.sakserv.storm.scheme.JsonScheme;
 
 
 public class KafkaHiveTopology {
@@ -34,7 +35,7 @@ public class KafkaHiveTopology {
         TopologyBuilder builder = new TopologyBuilder();
 
         // Setup the Kafka Spout
-        ConfigureKafkaSpout.configureKafkaSpout(builder, args[1], args[2], args[3]);
+        ConfigureKafkaSpout.configureKafkaSpout(builder, args[1], args[2], args[3], 1, "kafkaspout", new JsonScheme());
 
         // Setup the Hive Bolt
         String[] cols = args[4].split(",");

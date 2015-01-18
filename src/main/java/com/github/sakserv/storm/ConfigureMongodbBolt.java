@@ -21,11 +21,13 @@ public class ConfigureMongodbBolt {
 
     private static final Logger LOG = Logger.getLogger(ConfigureMongodbBolt.class);
 
-    public static void configureMongodbBolt(TopologyBuilder builder, String mongodbHost, int mongodbPort, String mongodbDB, String mongodbCollection) {
+    public static void configureMongodbBolt(TopologyBuilder builder, String mongodbHost, int mongodbPort, 
+                                            String mongodbDB, String mongodbCollection, int parallelismHint,
+                                            String sourceName, String boltName) {
         
         LOG.info("HDFS: Configuring the MongoBolt");
         SimpleMongoBolt bolt = new SimpleMongoBolt(mongodbHost, mongodbPort, mongodbDB, mongodbCollection);
-        builder.setBolt("mongobolt", bolt, 1).shuffleGrouping("kafkaspout");
+        builder.setBolt(boltName, bolt, parallelismHint).shuffleGrouping(sourceName);
 
     }
     

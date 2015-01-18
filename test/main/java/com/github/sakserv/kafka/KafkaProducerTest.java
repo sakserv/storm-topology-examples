@@ -19,7 +19,7 @@ public class KafkaProducerTest {
 
     public static void produceMessages(String brokerList, String topic, int msgCount) throws JSONException {
         // Add Producer properties and created the Producer
-        ProducerConfig config = new ProducerConfig(setKafkaProps(brokerList));
+        ProducerConfig config = new ProducerConfig(setKafkaBrokerProps(brokerList));
         Producer<String, String> producer = new Producer<String, String>(config);
 
         LOG.info("KAFKA: Preparing To Send " + msgCount + " Events.");
@@ -42,7 +42,7 @@ public class KafkaProducerTest {
         producer.close();
     }
     
-    private static Properties setKafkaProps(String brokerList) {
+    private static Properties setKafkaBrokerProps(String brokerList) {
 
         Properties props = new Properties();
         props.put("metadata.broker.list", brokerList);

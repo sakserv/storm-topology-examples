@@ -17,6 +17,7 @@ package com.github.sakserv.storm;
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
+import com.github.sakserv.storm.scheme.JsonScheme;
 
 
 public class KafkaHdfsTopology {
@@ -34,7 +35,7 @@ public class KafkaHdfsTopology {
         TopologyBuilder builder = new TopologyBuilder();
 
         // Setup the Kafka Spout
-        ConfigureKafkaSpout.configureKafkaSpout(builder, args[1], args[2], args[3]);
+        ConfigureKafkaSpout.configureKafkaSpout(builder, args[1], args[2], args[3], 1, "kafkaspout", new JsonScheme());
 
         // Setup the HDFS Bolt
         ConfigureHdfsBolt.configureHdfsBolt(builder, args[4], args[5], args[6]);

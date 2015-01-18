@@ -1,12 +1,14 @@
 package com.github.sakserv.storm;
 
 import backtype.storm.Config;
+import backtype.storm.spout.Scheme;
 import backtype.storm.topology.TopologyBuilder;
 import com.github.sakserv.kafka.KafkaProducerTest;
 import com.github.sakserv.minicluster.impl.KafkaLocalBroker;
 import com.github.sakserv.minicluster.impl.MongodbLocalServer;
 import com.github.sakserv.minicluster.impl.StormLocalCluster;
 import com.github.sakserv.minicluster.impl.ZookeeperLocalCluster;
+import com.github.sakserv.storm.scheme.JsonScheme;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -33,6 +35,10 @@ public class KafkaMongodbTopologyTest {
     // Logger
     private static final Logger LOG = Logger.getLogger(KafkaHiveHdfsTopologyTest.class);
 
+    // Zookeeper static
+    private static final String DEFAULT_ZK_TEMP_DIR = "embedded_zk";
+    private static final int DEFAULT_ZK_PORT = 2181;
+    
     // Kafka static
     private static final String DEFAULT_LOG_DIR = "embedded_kafka";
     private static final String TEST_TOPIC = "test-topic";
@@ -42,15 +48,20 @@ public class KafkaMongodbTopologyTest {
     private static final int DEFAULT_NUM_MESSAGES = 50;
     private static final String DEFAULT_OFFSET = "-2";
     private static final String DEFAULT_KAFKA_MSG_PAYLOAD = "test-message1";
+    private static final String DEFAULT_KAFKASPOUT_NAME = "kafkaspout";
+    private static final int DEFAULT_KAFKASPOUT_PARALLELISM = 1;
+    private static final Scheme DEFAULT_KAFKASPOUT_SCHEME = new JsonScheme();
 
     // MongoDB static
     private static final String DEFAULT_MONGODB_DATABASE_NAME = "test_database";
     private static final String DEFAULT_MONGODB_COLLECTION_NAME = "test_collection";
     private static final String DEFAULT_MONGODB_IP = "127.0.0.1";
     private static final int DEFAULT_MONGOD_PORT = 12345;
+    private static final int DEFAULT_MONGOBOLT_PARALLELISM = 1;
+    private static final String DEFAULT_MONGOBOLT_NAME = "mongobolt";
 
     // Storm static
-    private static final String TEST_TOPOLOGY_NAME = "test";
+    private static final String TEST_TOPOLOGY_NAME = "test_topology";
     
     private ZookeeperLocalCluster zookeeperLocalCluster;
     private MongodbLocalServer mongodbLocalServer;
@@ -59,11 +70,12 @@ public class KafkaMongodbTopologyTest {
     
     @Before
     public void setUp() {
-        zookeeperLocalCluster = new ZookeeperLocalCluster();
+        zookeeperLocalCluster = new ZookeeperLocalCluster(DEFAULT_ZK_PORT, DEFAULT_ZK_TEMP_DIR);
         zookeeperLocalCluster.start();
 
         // Start Kafka
-        kafkaLocalBroker = new KafkaLocalBroker(TEST_TOPIC, DEFAULT_LOG_DIR, KAFKA_PORT, BROKER_ID, zookeeperLocalCluster.getZkConnectionString());
+        kafkaLocalBroker = new KafkaLocalBroker(TEST_TOPIC, DEFAULT_LOG_DIR, KAFKA_PORT, BROKER_ID, 
+                zookeeperLocalCluster.getZkConnectionString());
         kafkaLocalBroker.start();
         
         mongodbLocalServer = new MongodbLocalServer(DEFAULT_MONGODB_IP, DEFAULT_MONGOD_PORT);
@@ -93,9 +105,12 @@ public class KafkaMongodbTopologyTest {
         LOG.info("STORM: Starting Topology: " + TEST_TOPOLOGY_NAME);
         TopologyBuilder builder = new TopologyBuilder();
         ConfigureKafkaSpout.configureKafkaSpout(builder, zookeeperLocalCluster.getZkConnectionString(), 
-                TEST_TOPIC, DEFAULT_OFFSET);
+                TEST_TOPIC, DEFAULT_OFFSET, DEFAULT_KAFKASPOUT_PARALLELISM, DEFAULT_KAFKASPOUT_NAME,
+                DEFAULT_KAFKASPOUT_SCHEME);
+        
         ConfigureMongodbBolt.configureMongodbBolt(builder, mongodbLocalServer.getBindIp(), 
-                mongodbLocalServer.getBindPort(), DEFAULT_MONGODB_DATABASE_NAME, DEFAULT_MONGODB_COLLECTION_NAME);
+                mongodbLocalServer.getBindPort(), DEFAULT_MONGODB_DATABASE_NAME, DEFAULT_MONGODB_COLLECTION_NAME,
+                DEFAULT_MONGOBOLT_PARALLELISM, DEFAULT_KAFKASPOUT_NAME, DEFAULT_MONGOBOLT_NAME);
         stormCluster.submitTopology(TEST_TOPOLOGY_NAME, new Config(), builder.createTopology());
     }
     

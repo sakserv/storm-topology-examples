@@ -14,6 +14,7 @@
 
 package com.github.sakserv.storm;
 
+import backtype.storm.spout.Scheme;
 import backtype.storm.spout.SchemeAsMultiScheme;
 import backtype.storm.topology.TopologyBuilder;
 import com.github.sakserv.storm.scheme.JsonScheme;
@@ -28,7 +29,9 @@ public class ConfigureKafkaSpout {
 
     private static final Logger LOG = Logger.getLogger(ConfigureKafkaSpout.class);
 
-    public static void configureKafkaSpout(TopologyBuilder builder, String zkHostString, String kafkaTopic, String kafkaStartOffset) {
+    public static void configureKafkaSpout(TopologyBuilder builder, String zkHostString, String kafkaTopic, 
+                                           String kafkaStartOffset, int parallelismHint, String spoutName,
+                                           Scheme spoutScheme) {
 
         LOG.info("HDFS: Configuring the KafkaSpout");
 
@@ -38,17 +41,17 @@ public class ConfigureKafkaSpout {
                 "/" + kafkaTopic, // Root path in Zookeeper for the spout to store consumer offsets
                 UUID.randomUUID().toString());  // ID for storing consumer offsets in Zookeeper
         //spoutConfig.scheme = new SchemeAsMultiScheme(new StringScheme());
-        spoutConfig.scheme = new SchemeAsMultiScheme(new JsonScheme());
+        spoutConfig.scheme = new SchemeAsMultiScheme(spoutScheme);
         setKafkaOffset(spoutConfig, kafkaStartOffset);
         
         KafkaSpout kafkaSpout = new KafkaSpout(spoutConfig);
 
         // Add the spout and bolt to the topology
-        builder.setSpout("kafkaspout", kafkaSpout, 1);
+        builder.setSpout(spoutName, kafkaSpout, parallelismHint);
 
     }
     
-    public static void setKafkaOffset(SpoutConfig spoutConfig, String kafkaStartOffset) {
+    private static void setKafkaOffset(SpoutConfig spoutConfig, String kafkaStartOffset) {
         // Allow for passing in an offset time
         // startOffsetTime has a bug that ignores the special -2 value
         if(kafkaStartOffset == "-2") {
