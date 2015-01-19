@@ -18,6 +18,7 @@ public class ConfigVars {
     // Zookeeper
     public static final String ZOOKEEPER_TEMP_DIR_KEY = "zookeeper.temp.dir";
     public static final String ZOOKEEPER_PORT_KEY = "zookeeper.port";
+    public static final String ZOOKEEPER_HOSTS_KEY = "zookeeper.hosts";
     public static final String ZOOKEEPER_CONNECTION_STRING_KEY = "zookeeper.connection.string";
     
     // Kafka

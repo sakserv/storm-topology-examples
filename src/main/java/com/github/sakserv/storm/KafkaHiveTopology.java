@@ -49,7 +49,7 @@ public class KafkaHiveTopology {
         // Setup the Hive Bolt
         String[] cols = args[4].split(",");
         String[] parts = {args[5]};
-        ConfigureHiveBolt.configureHiveStreamingBolt(builder, cols, parts, args[6], args[7], args[8]);
+        ConfigureHiveBolt.configureHiveStreamingBolt(builder, cols, parts, args[6], args[7], args[8], "hivebolt", "kafkaspout");
 
         // Topology
         Config conf = new Config();

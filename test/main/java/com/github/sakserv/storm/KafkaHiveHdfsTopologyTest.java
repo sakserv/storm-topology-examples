@@ -57,13 +57,6 @@ public class KafkaHiveHdfsTopologyTest {
     private PropertyParser propertyParser;
     private static final String PROP_FILE = "local.properties";
 
-    // Kafka static
-    private static final String DEFAULT_LOG_DIR = "embedded_kafka";
-    private static final String TEST_TOPIC = "test-topic";
-    private static final Integer KAFKA_PORT = 9092;
-    private static final String LOCALHOST_BROKER = "localhost:" + KAFKA_PORT.toString();
-    private static final Integer BROKER_ID = 1;
-
     // Storm static
     private static final String TEST_TOPOLOGY_NAME = "test";
 
@@ -72,22 +65,22 @@ public class KafkaHiveHdfsTopologyTest {
     private static final String HIVE_TABLE_NAME = "test";
     private static final String[] HIVE_COLS = {"id", "msg"};
     private static final String[] HIVE_PARTITIONS = {"dt"};
-    private static final String HIVE_TABLE_LOC = new File("test_table").getAbsolutePath();
+    private static final String HIVE_TABLE_LOC = new File("hive_test_table").getAbsolutePath();
 
     // HDFS static
     private static final String HDFS_OUTPUT_DIR = "/tmp/kafka_data";
 
     // Zookeeper
-    private ZookeeperLocalCluster zkCluster;
+    private ZookeeperLocalCluster zookeeperLocalCluster;
 
     // Kafka
-    private KafkaLocalBroker kafkaCluster;
+    private KafkaLocalBroker kafkaLocalBroker;
 
     // Storm
-    private StormLocalCluster stormCluster;
+    private StormLocalCluster stormLocalCluster;
 
     // HDFS
-    private HdfsLocalCluster hdfsCluster;
+    private HdfsLocalCluster hdfsLocalCluster;
 
     // Hive MetaStore
     private HiveLocalMetaStore hiveLocalMetaStore;
@@ -102,13 +95,15 @@ public class KafkaHiveHdfsTopologyTest {
         propertyParser = new PropertyParser();
         propertyParser.parsePropsFile(PROP_FILE);
 
-        // Start ZK
-        zkCluster = new ZookeeperLocalCluster();
-        zkCluster.start();
+        // Start Zookeeper
+        zookeeperLocalCluster = new ZookeeperLocalCluster(
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)),
+                propertyParser.getProperty(ConfigVars.ZOOKEEPER_TEMP_DIR_KEY));
+        zookeeperLocalCluster.start();
 
         // Start HDFS
-        hdfsCluster = new HdfsLocalCluster();
-        hdfsCluster.start();
+        hdfsLocalCluster = new HdfsLocalCluster();
+        hdfsLocalCluster.start();
 
         // Start HiveMetaStore
         hiveLocalMetaStore = new HiveLocalMetaStore();
@@ -118,12 +113,18 @@ public class KafkaHiveHdfsTopologyTest {
         hiveLocalServer2.start();
 
         // Start Kafka
-        kafkaCluster = new KafkaLocalBroker(TEST_TOPIC, DEFAULT_LOG_DIR, KAFKA_PORT, BROKER_ID, zkCluster.getZkConnectionString());
-        kafkaCluster.start();
+        // Start Kafka
+        kafkaLocalBroker = new KafkaLocalBroker(propertyParser.getProperty(ConfigVars.KAFKA_TOPIC_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_TEST_TEMP_DIR_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_PORT_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_BROKER_ID_KEY)),
+                propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY));
+        kafkaLocalBroker.start();
 
         // Start Storm
-        stormCluster = new StormLocalCluster(zkCluster.getZkHostName(), Long.parseLong(zkCluster.getZkPort()));
-        stormCluster.start();
+        stormLocalCluster = new StormLocalCluster(propertyParser.getProperty(ConfigVars.ZOOKEEPER_HOSTS_KEY),
+                Long.parseLong(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)));
+        stormLocalCluster.start();
     }
 
     @After
@@ -131,11 +132,11 @@ public class KafkaHiveHdfsTopologyTest {
 
         // Stop Storm
         try {
-            stormCluster.stop(TEST_TOPOLOGY_NAME);
+            stormLocalCluster.stop(TEST_TOPOLOGY_NAME);
         } catch(IllegalStateException e) { }
 
         // Stop Kafka
-        kafkaCluster.stop(true);
+        kafkaLocalBroker.stop(true);
 
         // Stop HiveMetaStore
         hiveLocalMetaStore.stop();
@@ -145,10 +146,10 @@ public class KafkaHiveHdfsTopologyTest {
         FileUtils.deleteFolder(HIVE_TABLE_LOC);
 
         // Stop HDFS
-        hdfsCluster.stop(true);
+        hdfsLocalCluster.stop(true);
 
         // Stop ZK
-        zkCluster.stop(true);
+        zookeeperLocalCluster.stop(true);
     }
 
     public void createTable() throws TException {
@@ -209,12 +210,24 @@ public class KafkaHiveHdfsTopologyTest {
     public void runStormKafkaHiveHdfsTopology() {
         LOG.info("STORM: Starting Topology: " + TEST_TOPOLOGY_NAME);
         TopologyBuilder builder = new TopologyBuilder();
-        ConfigureKafkaSpout.configureKafkaSpout(builder, zkCluster.getZkConnectionString(), TEST_TOPIC, "-2", 1, 
-                "kafkaspout",
+
+        // Configure the KafkaSpout
+        ConfigureKafkaSpout.configureKafkaSpout(builder,
+                propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_TOPIC_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_START_OFFSET_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_PARALLELISM_KEY)),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_SCHEME_CLASS_KEY));
-        ConfigureHdfsBolt.configureHdfsBolt(builder, ",", HDFS_OUTPUT_DIR, hdfsCluster.getHdfsUriString());
-        ConfigureHiveBolt.configureHiveStreamingBolt(builder, HIVE_COLS, HIVE_PARTITIONS, hiveLocalMetaStore.getMetaStoreUri(), HIVE_DB_NAME, HIVE_TABLE_NAME);
-        stormCluster.submitTopology(TEST_TOPOLOGY_NAME, new Config(), builder.createTopology());
+
+        ConfigureHdfsBolt.configureHdfsBolt(builder, ",", HDFS_OUTPUT_DIR, hdfsLocalCluster.getHdfsUriString(),
+                "hdfsbolt",
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY));
+        ConfigureHiveBolt.configureHiveStreamingBolt(builder, HIVE_COLS, HIVE_PARTITIONS, 
+                hiveLocalMetaStore.getMetaStoreUri(), HIVE_DB_NAME, HIVE_TABLE_NAME,
+                "hivebolt",
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY));
+        stormLocalCluster.submitTopology(TEST_TOPOLOGY_NAME, new Config(), builder.createTopology());
     }
 
     public void validateHiveResults() throws ClassNotFoundException, SQLException {
@@ -241,7 +254,7 @@ public class KafkaHiveHdfsTopologyTest {
 
     public void validateHdfsResults() throws IOException {
         LOG.info("HDFS: VALIDATING");
-        FileSystem hdfsFsHandle = hdfsCluster.getHdfsFileSystemHandle();
+        FileSystem hdfsFsHandle = hdfsLocalCluster.getHdfsFileSystemHandle();
         RemoteIterator<LocatedFileStatus> listFiles = hdfsFsHandle.listFiles(new Path("/tmp/kafka_data"), true);
         while (listFiles.hasNext()) {
             LocatedFileStatus file = listFiles.next();
@@ -262,10 +275,16 @@ public class KafkaHiveHdfsTopologyTest {
     @Test
     public void testKafkaHiveHdfsTopology() throws TException, JSONException, ClassNotFoundException, SQLException, IOException {
 
-        // Create the Hive table, produce test messages to Kafka, start the kafka-hive-hdfs Storm topology
-        // Sleep 10 seconds to let processing complete
+        // Run the Kafka Producer
+        KafkaProducerTest.produceMessages(propertyParser.getProperty(ConfigVars.KAFKA_TEST_BROKER_LIST_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_TOPIC_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)),
+                propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_PAYLOAD_KEY));
+        
+        // Create the Hive table
         createTable();
-        KafkaProducerTest.produceMessages(LOCALHOST_BROKER, TEST_TOPIC, 50, propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_PAYLOAD_KEY));
+        
+        // Run the Kafka Hive/HDFS topology and sleep 10 seconds to wait for completion
         runStormKafkaHiveHdfsTopology();
         try {
             Thread.sleep(10000L);
@@ -274,7 +293,7 @@ public class KafkaHiveHdfsTopologyTest {
         }
 
         // To ensure transactions and files are closed, stop storm
-        stormCluster.stop(TEST_TOPOLOGY_NAME);
+        stormLocalCluster.stop(TEST_TOPOLOGY_NAME);
         try {
             Thread.sleep(10000L);
         } catch (InterruptedException e) {

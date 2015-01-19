@@ -47,7 +47,7 @@ public class KafkaHdfsTopology {
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_SCHEME_CLASS_KEY));
 
         // Setup the HDFS Bolt
-        ConfigureHdfsBolt.configureHdfsBolt(builder, args[4], args[5], args[6]);
+        ConfigureHdfsBolt.configureHdfsBolt(builder, args[4], args[5], args[6], "hdfsbolt", "kafkaspout");
 
         // Topology
         Config conf = new Config();

@@ -30,7 +30,8 @@ public class ConfigureHdfsBolt {
 
     private static final Logger LOG = Logger.getLogger(ConfigureHdfsBolt.class);
 
-    public static void configureHdfsBolt(TopologyBuilder builder, String delimiter, String outputPath, String hdfsUri) {
+    public static void configureHdfsBolt(TopologyBuilder builder, String delimiter, String outputPath, String hdfsUri,
+                                         String hdfsBoltName, String spoutName) {
         
         LOG.info("HDFS: Configuring the HdfsBolt");
         RecordFormat format = new DelimitedRecordFormat().withFieldDelimiter(delimiter);
@@ -44,7 +45,7 @@ public class ConfigureHdfsBolt {
                 .withRecordFormat(format)
                 .withRotationPolicy(rotationPolicy)
                 .withSyncPolicy(syncPolicy);
-        builder.setBolt("hdfsbolt", bolt, 1).shuffleGrouping("kafkaspout");
+        builder.setBolt(hdfsBoltName, bolt, 1).shuffleGrouping(spoutName);
 
     }
     

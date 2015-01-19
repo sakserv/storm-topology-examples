@@ -45,7 +45,7 @@ public class KafkaMongodbTopologyTest {
     private ZookeeperLocalCluster zookeeperLocalCluster;
     private MongodbLocalServer mongodbLocalServer;
     private KafkaLocalBroker kafkaLocalBroker;
-    private StormLocalCluster stormCluster;
+    private StormLocalCluster stormLocalCluster;
     
     @Before
     public void setUp() throws IOException {
@@ -73,16 +73,16 @@ public class KafkaMongodbTopologyTest {
         mongodbLocalServer.start();
 
         // Start Storm
-        stormCluster = new StormLocalCluster(zookeeperLocalCluster.getZkHostName(), 
-                Long.parseLong(zookeeperLocalCluster.getZkPort()));
-        stormCluster.start();
+        stormLocalCluster = new StormLocalCluster(propertyParser.getProperty(ConfigVars.ZOOKEEPER_HOSTS_KEY),
+                Long.parseLong(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)));
+        stormLocalCluster.start();
     }
     
     @After
     public void tearDown() {
         // Stop Storm
         try {
-            stormCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
+            stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
         } catch(IllegalStateException e) { }
         
         mongodbLocalServer.stop();
@@ -116,7 +116,7 @@ public class KafkaMongodbTopologyTest {
                 propertyParser.getProperty(ConfigVars.MONGO_BOLT_NAME_KEY));
         
         // Submit the topology
-        stormCluster.submitTopology(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME), 
+        stormLocalCluster.submitTopology(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME),
                 new Config(), builder.createTopology());
     }
     
@@ -162,10 +162,13 @@ public class KafkaMongodbTopologyTest {
     @Test
     public void testKafkaMongodbTopology() throws JSONException, IOException {
 
+        // Run the Kafka Producer
         KafkaProducerTest.produceMessages(propertyParser.getProperty(ConfigVars.KAFKA_TEST_BROKER_LIST_KEY),
                 propertyParser.getProperty(ConfigVars.KAFKA_TOPIC_KEY),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)),
                 propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_PAYLOAD_KEY));
+        
+        // Run the Kafka Mongo topology and sleep 5 sec to wait for completion
         runStormKafkaMongodbTopology();
         try {
             Thread.sleep(5000L);
@@ -173,11 +176,7 @@ public class KafkaMongodbTopologyTest {
             System.exit(1);
         }
         
+        // Validate the results in Mongo
         validateMongo();
-        try {
-            Thread.sleep(5000L);
-        } catch (InterruptedException e) {
-            System.exit(1);
-        }
     }
 }

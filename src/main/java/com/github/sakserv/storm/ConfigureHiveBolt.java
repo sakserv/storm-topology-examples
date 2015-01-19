@@ -25,7 +25,9 @@ public class ConfigureHiveBolt {
 
     private static final Logger LOG = Logger.getLogger(ConfigureHiveBolt.class);
 
-    public static void configureHiveStreamingBolt(TopologyBuilder builder, String[] colNames, String[] partitionCol, String metastoreUri, String dbName, String tableName) {
+    public static void configureHiveStreamingBolt(TopologyBuilder builder, String[] colNames, String[] partitionCol, 
+                                                  String metastoreUri, String dbName, String tableName,
+                                                  String hiveBoltName, String spoutName) {
 
         LOG.info("HDFS: Configuring the HiveBolt");
 
@@ -40,7 +42,7 @@ public class ConfigureHiveBolt {
                 .withIdleTimeout(3600)
                 .withHeartBeatInterval(240);
         HiveBolt bolt = new HiveBolt(hiveOptions);
-        builder.setBolt("hivebolt", bolt, 1).shuffleGrouping("kafkaspout");
+        builder.setBolt(hiveBoltName, bolt, 1).shuffleGrouping(spoutName);
 
     }
 }
