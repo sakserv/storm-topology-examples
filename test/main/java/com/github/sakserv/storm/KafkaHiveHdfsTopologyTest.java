@@ -15,6 +15,7 @@
 package com.github.sakserv.storm;
 
 import backtype.storm.Config;
+import backtype.storm.generated.KillOptions;
 import backtype.storm.topology.TopologyBuilder;
 import com.github.sakserv.config.ConfigVars;
 import com.github.sakserv.config.PropertyParser;
@@ -51,6 +52,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+
 public class KafkaHiveHdfsTopologyTest {
     
     // Logger
@@ -85,11 +88,17 @@ public class KafkaHiveHdfsTopologyTest {
         hdfsLocalCluster.start();
 
         // Start HiveMetaStore
-        hiveLocalMetaStore = new HiveLocalMetaStore();
+        hiveLocalMetaStore = new HiveLocalMetaStore(
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_METASTORE_PORT_KEY)),
+                propertyParser.getProperty((ConfigVars.HIVE_METASTORE_DERBY_DB_PATH_KEY)));
         hiveLocalMetaStore.start();
-
-        // Start HiveServer2
-        hiveLocalServer2 = new HiveLocalServer2();
+        
+        
+        hiveLocalServer2 = new HiveLocalServer2(hiveLocalMetaStore.getMetaStoreUri(),
+                propertyParser.getProperty(ConfigVars.HIVE_METASTORE_DERBY_DB_PATH_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_SCRATCH_DIR_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_SERVER2_PORT_KEY)),
+                zookeeperLocalCluster.getZkConnectionString());
         hiveLocalServer2.start();
         
         // Start Kafka
@@ -135,6 +144,7 @@ public class KafkaHiveHdfsTopologyTest {
     public void createTable() throws TException {
         HiveMetaStoreClient hiveClient = new HiveMetaStoreClient(hiveLocalMetaStore.getConf());
 
+        LOG.info("HIVE: Dropping hive table: " + propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY));
         hiveClient.dropTable(propertyParser.getProperty(ConfigVars.HIVE_BOLT_DATABASE_KEY),
                 propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY),
                 true, true);
@@ -191,6 +201,63 @@ public class KafkaHiveHdfsTopologyTest {
         LOG.info("HIVE: Created Table: " + createdTable.toString());
     }
 
+    public void validateHiveResults() throws ClassNotFoundException, SQLException {
+        LOG.info("HIVE: VALIDATING");
+        // Load the Hive JDBC driver
+        LOG.info("HIVE: Loading the Hive JDBC Driver");
+        Class.forName("org.apache.hive.jdbc.HiveDriver");
+
+        Connection con = DriverManager.getConnection("jdbc:hive2://localhost:" + hiveLocalServer2.getHiveServerThriftPort() + "/" + 
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_DATABASE_KEY), "user", "pass");
+
+        String selectStmt = "SELECT * FROM " + propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY);
+        //String selectStmt = "SHOW TABLES";
+        Statement stmt = con.createStatement();
+
+        LOG.info("HIVE: Running Select Statement: " + selectStmt);
+        ResultSet resultSet = stmt.executeQuery(selectStmt);
+        int count = 0;
+        while (resultSet.next()) {
+            ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+            for (int i = 1; i <= resultSetMetaData.getColumnCount(); i++) {
+                System.out.print(resultSet.getString(i) + "\t");
+            }
+            System.out.println();
+            count++;
+        }
+        // Validate the number of rows matches the number of kafka messages
+        //assertEquals(Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)), count);
+    }
+
+    public void validateHdfsResults() throws IOException {
+        LOG.info("HDFS: VALIDATING");
+        
+        // Get the filesystem handle and a list of files written by the test
+        FileSystem hdfsFsHandle = hdfsLocalCluster.getHdfsFileSystemHandle();
+        RemoteIterator<LocatedFileStatus> listFiles = hdfsFsHandle.listFiles(
+                new Path(propertyParser.getProperty(ConfigVars.HDFS_BOLT_OUTPUT_LOCATION_KEY)), true);
+
+        // Loop through the files and count up the lines
+        int count = 0;
+        while (listFiles.hasNext()) {
+            LocatedFileStatus file = listFiles.next();
+
+            LOG.info("HDFS READ: Found File: " + file);
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(hdfsFsHandle.open(file.getPath())));
+            String line = br.readLine();
+            while (line != null) {
+                LOG.info("HDFS READ: Found Line: " + line);
+                line = br.readLine();
+                count++;
+            }
+        }
+        hdfsFsHandle.close();
+
+        // Validate the number of lines matches the number of kafka messages
+        assertEquals(Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)), count);
+    }
+
     public void runStormKafkaHiveHdfsTopology() throws IOException {
         LOG.info("STORM: Starting Topology: " + propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
         TopologyBuilder builder = new TopologyBuilder();
@@ -208,14 +275,14 @@ public class KafkaHiveHdfsTopologyTest {
         FileRotationPolicy fileRotationPolicy = ConfigureHdfsBolt.configureFileRotationPolicy(PROP_FILE);
         ConfigureHdfsBolt.configureHdfsBolt(builder,
                 propertyParser.getProperty(ConfigVars.HDFS_BOLT_FIELD_DELIMITER_KEY),
-                propertyParser.getProperty(ConfigVars.HDFS_BOLT_OUTPUT_LOCATION_KEY), 
+                propertyParser.getProperty(ConfigVars.HDFS_BOLT_OUTPUT_LOCATION_KEY),
                 hdfsLocalCluster.getHdfsUriString(),
                 propertyParser.getProperty(ConfigVars.HDFS_BOLT_NAME_KEY),
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_BOLT_PARALLELISM_KEY)),
                 fileRotationPolicy,
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_BOLT_SYNC_COUNT_KEY)));
-        
+
         // Configure the HiveBolt
         ConfigureHiveBolt.configureHiveStreamingBolt(builder,
                 propertyParser.getProperty(ConfigVars.HIVE_BOLT_COLUMN_LIST_KEY),
@@ -233,8 +300,8 @@ public class KafkaHiveHdfsTopologyTest {
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_BATCH_SIZE_KEY)),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_IDLE_TIMEOUT_KEY)),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_HEARTBEAT_INTERVAL)));
-        
-        
+
+
         // Storm Topology Config
         Config stormConfig = StormConfig.createStormConfig(
                 Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG)),
@@ -243,49 +310,6 @@ public class KafkaHiveHdfsTopologyTest {
         // Submit the topology
         stormLocalCluster.submitTopology(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME), new Config(), builder.createTopology());
     }
-
-    public void validateHiveResults() throws ClassNotFoundException, SQLException {
-        LOG.info("HIVE: VALIDATING");
-        // Load the Hive JDBC driver
-        LOG.info("HIVE: Loading the Hive JDBC Driver");
-        Class.forName("org.apache.hive.jdbc.HiveDriver");
-
-        Connection con = DriverManager.getConnection("jdbc:hive2://localhost:" + hiveLocalServer2.getHiveServerThriftPort() + "/" + 
-                propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY), "user", "pass");
-
-        String selectStmt = "SELECT * FROM " + propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY);
-        Statement stmt = con.createStatement();
-
-        LOG.info("HIVE: Running Select Statement: " + selectStmt);
-        ResultSet resultSet = stmt.executeQuery(selectStmt);
-        while (resultSet.next()) {
-            ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-            for (int i = 1; i <= resultSetMetaData.getColumnCount(); i++) {
-                System.out.print(resultSet.getString(i) + "\t");
-            }
-            System.out.println();
-        }
-    }
-
-    public void validateHdfsResults() throws IOException {
-        LOG.info("HDFS: VALIDATING");
-        FileSystem hdfsFsHandle = hdfsLocalCluster.getHdfsFileSystemHandle();
-        RemoteIterator<LocatedFileStatus> listFiles = hdfsFsHandle.listFiles(new Path("/tmp/kafka_data"), true);
-        while (listFiles.hasNext()) {
-            LocatedFileStatus file = listFiles.next();
-
-            LOG.info("HDFS READ: Found File: " + file);
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(hdfsFsHandle.open(file.getPath())));
-            String line = br.readLine();
-            while (line != null) {
-                LOG.info("HDFS READ: Found Line: " + line);
-                line = br.readLine();
-            }
-        }
-        hdfsFsHandle.close();
-    }
-
 
     @Test
     public void testKafkaHiveHdfsTopology() throws TException, JSONException, ClassNotFoundException, SQLException, IOException {
@@ -308,7 +332,8 @@ public class KafkaHiveHdfsTopologyTest {
         }
 
         // To ensure transactions and files are closed, stop storm
-        stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
+        stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME), 
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_KILL_TOPOLOGY_WAIT_SECS)));
         try {
             Thread.sleep(10000L);
         } catch (InterruptedException e) {
@@ -316,6 +341,7 @@ public class KafkaHiveHdfsTopologyTest {
         }
 
         // Validate Hive table is populated
+        hiveLocalServer2.dumpConfig();
         validateHiveResults();
         try {
             Thread.sleep(10000L);

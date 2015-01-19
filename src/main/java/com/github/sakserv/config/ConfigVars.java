@@ -39,7 +39,13 @@ public class ConfigVars {
     public static final String KAFKA_TEST_MSG_PAYLOAD_KEY = "kafka.test.msg.payload";
     
     // Hive
+    public static final String HIVE_METASTORE_HOST_KEY = "hive.metastore.host";
+    public static final String HIVE_METASTORE_PORT_KEY = "hive.metastore.port";
     public static final String HIVE_METASTORE_URI_KEY = "hive.metastore.uri";
+    public static final String HIVE_METASTORE_DERBY_DB_PATH_KEY = "hive.metastore.derby.db.path";
+    public static final String HIVE_SCRATCH_DIR_KEY = "hive.scratch.dir";
+    public static final String HIVE_SERVER2_PORT_KEY = "hive.server2.port";
+    
     
     // Hive Bolt
     public static final String HIVE_BOLT_DATABASE_KEY = "hive.bolt.database";
@@ -99,5 +105,8 @@ public class ConfigVars {
     public static final String STORM_TOPOLOGY_NAME = "storm.topology.name";
     public static final String STORM_ENABLE_DEBUG = "storm.enable.debug";
     public static final String STORM_NUM_WORKERS = "storm.num.workers";
+    
+    // Storm - used for Unit Testing
+    public static final String STORM_KILL_TOPOLOGY_WAIT_SECS = "storm.kill.topology.wait.secs";
     
 }
