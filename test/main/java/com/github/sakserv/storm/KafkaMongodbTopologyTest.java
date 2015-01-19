@@ -41,17 +41,6 @@ public class KafkaMongodbTopologyTest {
     // Properties file for tests
     private PropertyParser propertyParser;
     private static final String PROP_FILE = "local.properties";
-
-    // MongoDB static
-    private static final String DEFAULT_MONGODB_DATABASE_NAME = "test_database";
-    private static final String DEFAULT_MONGODB_COLLECTION_NAME = "test_collection";
-    private static final String DEFAULT_MONGODB_IP = "127.0.0.1";
-    private static final int DEFAULT_MONGOD_PORT = 12345;
-    private static final int DEFAULT_MONGOBOLT_PARALLELISM = 1;
-    private static final String DEFAULT_MONGOBOLT_NAME = "mongobolt";
-
-    // Storm static
-    private static final String TEST_TOPOLOGY_NAME = "test_topology";
     
     private ZookeeperLocalCluster zookeeperLocalCluster;
     private MongodbLocalServer mongodbLocalServer;
@@ -79,7 +68,8 @@ public class KafkaMongodbTopologyTest {
         kafkaLocalBroker.start();
         
         // Start MongoDB
-        mongodbLocalServer = new MongodbLocalServer(DEFAULT_MONGODB_IP, DEFAULT_MONGOD_PORT);
+        mongodbLocalServer = new MongodbLocalServer(propertyParser.getProperty(ConfigVars.MONGO_IP_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.MONGO_PORT_KEY)));
         mongodbLocalServer.start();
 
         // Start Storm
@@ -92,7 +82,7 @@ public class KafkaMongodbTopologyTest {
     public void tearDown() {
         // Stop Storm
         try {
-            stormCluster.stop(TEST_TOPOLOGY_NAME);
+            stormCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
         } catch(IllegalStateException e) { }
         
         mongodbLocalServer.stop();
@@ -103,7 +93,7 @@ public class KafkaMongodbTopologyTest {
     }
 
     public void runStormKafkaMongodbTopology() {
-        LOG.info("STORM: Starting Topology: " + TEST_TOPOLOGY_NAME);
+        LOG.info("STORM: Starting Topology: " + propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
         TopologyBuilder builder = new TopologyBuilder();
         
         // Configure the KafkaSpout
@@ -117,25 +107,33 @@ public class KafkaMongodbTopologyTest {
         
         // Configure the MongoBolt
         ConfigureMongodbBolt.configureMongodbBolt(builder, 
-                mongodbLocalServer.getBindIp(), 
-                mongodbLocalServer.getBindPort(), 
-                DEFAULT_MONGODB_DATABASE_NAME, 
-                DEFAULT_MONGODB_COLLECTION_NAME,
-                DEFAULT_MONGOBOLT_PARALLELISM,
-                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY), DEFAULT_MONGOBOLT_NAME);
+                propertyParser.getProperty(ConfigVars.MONGO_IP_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.MONGO_PORT_KEY)),
+                propertyParser.getProperty(ConfigVars.MONGO_DATABASE_NAME_KEY),
+                propertyParser.getProperty(ConfigVars.MONGO_COLLECTION_NAME_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.MONGO_BOLT_PARALLELISM_KEY)),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
+                propertyParser.getProperty(ConfigVars.MONGO_BOLT_NAME_KEY));
         
         // Submit the topology
-        stormCluster.submitTopology(TEST_TOPOLOGY_NAME, new Config(), builder.createTopology());
+        stormCluster.submitTopology(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME), 
+                new Config(), builder.createTopology());
     }
     
     public void validateMongo() throws UnknownHostException {
-        MongoClient mongo = getMongoClient(DEFAULT_MONGODB_IP, DEFAULT_MONGOD_PORT);
-        DB db = getMongoDb(mongo, DEFAULT_MONGODB_DATABASE_NAME);
-        DBCollection collection = getMongoCollection(db, DEFAULT_MONGODB_COLLECTION_NAME);
+        
+        // Establish a connection to the Mongo Collection
+        MongoClient mongo = getMongoClient(propertyParser.getProperty(ConfigVars.MONGO_IP_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.MONGO_PORT_KEY)));
+        DB db = getMongoDb(mongo, propertyParser.getProperty(ConfigVars.MONGO_DATABASE_NAME_KEY));
+        DBCollection collection = getMongoCollection(db, 
+                propertyParser.getProperty(ConfigVars.MONGO_COLLECTION_NAME_KEY));
 
+        // Validate that all Kafka events were consumed by the MongoBolt and persisted
         LOG.info("MONGODB: Number of items in collection: " + collection.count());
         assertEquals(Long.parseLong(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)), collection.count());
 
+        // Check the payload of each document in Mongo to ensure it matches the Kafka event
         DBCursor cursor = collection.find();
         int counter = 0;
         while(cursor.hasNext()) {

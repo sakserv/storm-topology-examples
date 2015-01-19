@@ -36,6 +36,18 @@ public class ConfigVars {
     public static final String KAFKA_TEST_BROKER_ID_KEY = "kafka.broker.id";
     public static final String KAFKA_TEST_MSG_COUNT_KEY = "kafka.test.msg.count";
     public static final String KAFKA_TEST_MSG_PAYLOAD_KEY = "kafka.test.msg.payload";
+
+    // MongoDB
+    public static final String MONGO_IP_KEY = "mongo.ip";
+    public static final String MONGO_PORT_KEY = "mongo.port";
+    public static final String MONGO_DATABASE_NAME_KEY = "mongo.database.name";
+    public static final String MONGO_COLLECTION_NAME_KEY = "mongo.collection.name";
     
+    // MongoDB Bolt
+    public static final String MONGO_BOLT_NAME_KEY = "mongo.bolt.name";
+    public static final String MONGO_BOLT_PARALLELISM_KEY = "mongo.bolt.parallelism";
+    
+    // Storm
+    public static final String STORM_TOPOLOGY_NAME = "storm.topology.name";
     
 }
