@@ -19,6 +19,6 @@ The examples depend on the hadoop-mini-clusters project, which is already added 
 	<dependency>
 		<groupId>com.github.sakserv</groupId>
 		<artifactId>hadoop-mini-clusters</artifactId>
-		<version>0.0.8</version>
+		<version>0.0.9</version>
 	</dependency>
 ```
