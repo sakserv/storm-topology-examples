@@ -61,7 +61,7 @@ public class ConfigVars {
     public static final String HIVE_BOLT_MAX_OPEN_CONNECTIONS_KEY = "hive.bolt.max.open.connections";
     public static final String HIVE_BOLT_BATCH_SIZE_KEY = "hive.bolt.batch.size";
     public static final String HIVE_BOLT_IDLE_TIMEOUT_KEY = "hive.bolt.idle.timeout";
-    public static final String HIVE_BOLT_HEARTBEAT_INTERVAL = "hive.bolt.heartbeat.interval";
+    public static final String HIVE_BOLT_HEARTBEAT_INTERVAL_KEY = "hive.bolt.heartbeat.interval";
     
     // Hive Test - used for Unit Testing
     public static final String HIVE_TEST_TABLE_LOCATION_KEY = "hive.test.table.location";
@@ -102,11 +102,11 @@ public class ConfigVars {
     public static final String MONGO_BOLT_PARALLELISM_KEY = "mongo.bolt.parallelism";
     
     // Storm
-    public static final String STORM_TOPOLOGY_NAME = "storm.topology.name";
-    public static final String STORM_ENABLE_DEBUG = "storm.enable.debug";
-    public static final String STORM_NUM_WORKERS = "storm.num.workers";
+    public static final String STORM_TOPOLOGY_NAME_KEY = "storm.topology.name";
+    public static final String STORM_ENABLE_DEBUG_KEY = "storm.enable.debug";
+    public static final String STORM_NUM_WORKERS_KEY = "storm.num.workers";
     
     // Storm - used for Unit Testing
-    public static final String STORM_KILL_TOPOLOGY_WAIT_SECS = "storm.kill.topology.wait.secs";
+    public static final String STORM_KILL_TOPOLOGY_WAIT_SECS_KEY = "storm.kill.topology.wait.secs";
     
 }

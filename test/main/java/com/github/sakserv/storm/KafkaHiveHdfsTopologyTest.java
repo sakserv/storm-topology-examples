@@ -259,7 +259,7 @@ public class KafkaHiveHdfsTopologyTest {
     }
 
     public void runStormKafkaHiveHdfsTopology() throws IOException {
-        LOG.info("STORM: Starting Topology: " + propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
+        LOG.info("STORM: Starting Topology: " + propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME_KEY));
         TopologyBuilder builder = new TopologyBuilder();
 
         // Configure the KafkaSpout
@@ -299,16 +299,16 @@ public class KafkaHiveHdfsTopologyTest {
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_MAX_OPEN_CONNECTIONS_KEY)),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_BATCH_SIZE_KEY)),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_IDLE_TIMEOUT_KEY)),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_HEARTBEAT_INTERVAL)));
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_HEARTBEAT_INTERVAL_KEY)));
 
 
         // Storm Topology Config
         Config stormConfig = StormConfig.createStormConfig(
-                Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG)),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS)));
+                Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS_KEY)));
 
         // Submit the topology
-        stormLocalCluster.submitTopology(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME), new Config(), builder.createTopology());
+        stormLocalCluster.submitTopology(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME_KEY), new Config(), builder.createTopology());
     }
 
     @Test
@@ -332,8 +332,8 @@ public class KafkaHiveHdfsTopologyTest {
         }
 
         // To ensure transactions and files are closed, stop storm
-        stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME), 
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_KILL_TOPOLOGY_WAIT_SECS)));
+        stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_KILL_TOPOLOGY_WAIT_SECS_KEY)));
         try {
             Thread.sleep(10000L);
         } catch (InterruptedException e) {

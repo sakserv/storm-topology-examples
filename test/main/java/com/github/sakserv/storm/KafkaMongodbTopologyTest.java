@@ -83,7 +83,7 @@ public class KafkaMongodbTopologyTest {
     public void tearDown() {
         // Stop Storm
         try {
-            stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
+            stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME_KEY));
         } catch(IllegalStateException e) { }
         
         mongodbLocalServer.stop();
@@ -94,7 +94,7 @@ public class KafkaMongodbTopologyTest {
     }
 
     public void runStormKafkaMongodbTopology() {
-        LOG.info("STORM: Starting Topology: " + propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
+        LOG.info("STORM: Starting Topology: " + propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME_KEY));
         TopologyBuilder builder = new TopologyBuilder();
         
         // Configure the KafkaSpout
@@ -118,11 +118,11 @@ public class KafkaMongodbTopologyTest {
 
         // Storm Topology Config
         Config stormConfig = StormConfig.createStormConfig(
-                Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG)),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS)));
+                Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS_KEY)));
         
         // Submit the topology
-        stormLocalCluster.submitTopology(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME),
+        stormLocalCluster.submitTopology(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME_KEY),
                 stormConfig, builder.createTopology());
     }
     

@@ -230,6 +230,6 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.apache.curator:curator-test:2.5.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.javassist:javassist:3.18.1-GA" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.apache.commons:commons-math:2.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.mongodb:mongo-java-driver:2.11.3" level="project" />
+    <orderEntry type="library" name="Maven: org.mongodb:mongo-java-driver:2.11.3" level="project" />
   </component>
 </module>

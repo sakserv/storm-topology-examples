@@ -32,10 +32,9 @@ public class KafkaHdfsTopology {
         
         if (args.length < 2) {
             System.out.println("USAGE: storm jar </path/to/topo.jar> <com.package.TopologyMainClass> " +
-                    "<topo_display_name> </path/to/config.properties>");
+                    "</path/to/config.properties>");
             System.exit(1);
         }
-        String stormTopologyName = args[0];
         String propFilePath = args[1];
 
         // Parse the properties file
@@ -68,11 +67,12 @@ public class KafkaHdfsTopology {
 
         // Storm Topology Config
         Config stormConfig = StormConfig.createStormConfig(
-                Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG)),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS)));
+                Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS_KEY)));
 
         // Submit the topology
-        StormSubmitter.submitTopologyWithProgressBar(stormTopologyName, stormConfig, builder.createTopology());
+        StormSubmitter.submitTopologyWithProgressBar(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME_KEY),
+                stormConfig, builder.createTopology());
 
     }
 }
