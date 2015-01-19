@@ -25,24 +25,46 @@ public class ConfigureHiveBolt {
 
     private static final Logger LOG = Logger.getLogger(ConfigureHiveBolt.class);
 
-    public static void configureHiveStreamingBolt(TopologyBuilder builder, String[] colNames, String[] partitionCol, 
-                                                  String metastoreUri, String dbName, String tableName,
-                                                  String hiveBoltName, String spoutName) {
+    public static void configureHiveStreamingBolt(TopologyBuilder builder, 
+                                                  String colNames, 
+                                                  String partitionCol,
+                                                  String columnPartitionStringDelimiter,
+                                                  String metastoreUri, 
+                                                  String dbName, 
+                                                  String tableName,
+                                                  String hiveBoltName, 
+                                                  String spoutName,
+                                                  int parallelismHint,
+                                                  boolean autoCreatePartitions,
+                                                  int txnsPerBatch,
+                                                  int maxOpenConnections,
+                                                  int batchSize,
+                                                  int idleTimeout,
+                                                  int heartBeatInterval) {
 
-        LOG.info("HDFS: Configuring the HiveBolt");
+        LOG.info("HIVEBOLT: Configuring the HiveBolt");
 
+        // Define the record mapper
         DelimitedRecordHiveMapper mapper = new DelimitedRecordHiveMapper()
-                .withColumnFields(new Fields(colNames))
-                .withPartitionFields(new Fields(partitionCol));
+                .withColumnFields(new Fields(stringToStringArray(colNames, columnPartitionStringDelimiter)))
+                .withPartitionFields(new Fields(stringToStringArray(partitionCol, columnPartitionStringDelimiter)));
+        
+        // Defind the Hive options
         HiveOptions hiveOptions = new HiveOptions(metastoreUri, dbName, tableName, mapper)
-                .withAutoCreatePartitions(true)
-                .withTxnsPerBatch(100)
-                .withMaxOpenConnections(100)
-                .withBatchSize(1000)
-                .withIdleTimeout(3600)
-                .withHeartBeatInterval(240);
+                .withAutoCreatePartitions(autoCreatePartitions)
+                .withTxnsPerBatch(txnsPerBatch)
+                .withMaxOpenConnections(maxOpenConnections)
+                .withBatchSize(batchSize)
+                .withIdleTimeout(idleTimeout)
+                .withHeartBeatInterval(heartBeatInterval);
         HiveBolt bolt = new HiveBolt(hiveOptions);
-        builder.setBolt(hiveBoltName, bolt, 1).shuffleGrouping(spoutName);
+        
+        // Set the bolt
+        builder.setBolt(hiveBoltName, bolt, parallelismHint).shuffleGrouping(spoutName);
 
+    }
+    
+    private static String[] stringToStringArray(String stringToParse, String delimiter) {
+        return stringToParse.split(delimiter);
     }
 }

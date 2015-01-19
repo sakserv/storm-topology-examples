@@ -25,7 +25,7 @@ public class ConfigureMongodbBolt {
                                             String mongodbDB, String mongodbCollection, int parallelismHint,
                                             String sourceName, String boltName) {
         
-        LOG.info("HDFS: Configuring the MongoBolt");
+        LOG.info("MONGOBOLT: Configuring the MongoBolt");
         SimpleMongoBolt bolt = new SimpleMongoBolt(mongodbHost, mongodbPort, mongodbDB, mongodbCollection);
         builder.setBolt(boltName, bolt, parallelismHint).shuffleGrouping(sourceName);
 

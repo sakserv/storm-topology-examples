@@ -19,7 +19,9 @@ import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import com.github.sakserv.config.ConfigVars;
 import com.github.sakserv.config.PropertyParser;
+import com.github.sakserv.storm.config.StormConfig;
 import com.github.sakserv.storm.scheme.JsonScheme;
+import org.apache.hadoop.hdfs.DFSClient;
 
 
 public class KafkaHiveTopology {
@@ -27,37 +29,56 @@ public class KafkaHiveTopology {
     public static void main(String[] args) throws Exception {
 
         //TODO: Get rid of args and hardcoded properties file
-        
-        if (args.length < 7) {
+
+        if (args.length < 2) {
             System.out.println("USAGE: storm jar </path/to/topo.jar> <com.package.TopologyMainClass> " +
-                    "<topo_display_name> <zookeeper_host:port[,zookeeper_host:port]> " +
-                    "<kafka_topic_name> <offset_time_to_start_from> <hivecol1,[hivecol2]> " +
-                    "<hivepartition1,[hivepartiton2]> <metastoreUri> <hivedb> <hivetable>");
+                    "<topo_display_name> </path/to/config.properties>");
             System.exit(1);
         }
+        String stormTopologyName = args[0];
+        String propFilePath = args[1];
 
         // Parse the properties file
         PropertyParser propertyParser = new PropertyParser();
-        propertyParser.parsePropsFile("local.properties");
+        propertyParser.parsePropsFile(propFilePath);
 
         TopologyBuilder builder = new TopologyBuilder();
 
         // Setup the Kafka Spout
-        ConfigureKafkaSpout.configureKafkaSpout(builder, args[1], args[2], args[3], 1, "kafkaspout",
+        ConfigureKafkaSpout.configureKafkaSpout(builder, 
+                propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_TOPIC_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_START_OFFSET_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_PARALLELISM_KEY)),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_SCHEME_CLASS_KEY));
 
         // Setup the Hive Bolt
-        String[] cols = args[4].split(",");
-        String[] parts = {args[5]};
-        ConfigureHiveBolt.configureHiveStreamingBolt(builder, cols, parts, args[6], args[7], args[8], "hivebolt", "kafkaspout");
+        // Configure the HiveBolt
+        ConfigureHiveBolt.configureHiveStreamingBolt(builder,
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_COLUMN_LIST_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_PARTITION_LIST_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_COLUMN_PARTITION_LIST_DELIMITER_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_METASTORE_URI_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_DATABASE_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_NAME_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_PARALLELISM_KEY)),
+                Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.HIVE_BOLT_AUTO_CREATE_PARTITIONS_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_TXNS_PER_BATCH_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_MAX_OPEN_CONNECTIONS_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_BATCH_SIZE_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_IDLE_TIMEOUT_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_HEARTBEAT_INTERVAL)));
 
-        // Topology
-        Config conf = new Config();
-        conf.setDebug(true);
-        conf.setNumWorkers(1);
+        // Storm Topology Config
+        Config stormConfig = StormConfig.createStormConfig(
+                Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS)));
 
         // Submit the topology
-        StormSubmitter.submitTopologyWithProgressBar(args[0], conf, builder.createTopology());
+        StormSubmitter.submitTopologyWithProgressBar(stormTopologyName, stormConfig, builder.createTopology());
 
     }
 }

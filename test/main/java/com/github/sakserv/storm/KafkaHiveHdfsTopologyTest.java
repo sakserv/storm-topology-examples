@@ -21,6 +21,7 @@ import com.github.sakserv.config.PropertyParser;
 import com.github.sakserv.kafka.KafkaProducerTest;
 import com.github.sakserv.minicluster.impl.*;
 import com.github.sakserv.minicluster.util.FileUtils;
+import com.github.sakserv.storm.config.StormConfig;
 import com.github.sakserv.storm.scheme.JsonScheme;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
@@ -32,11 +33,13 @@ import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.ql.io.orc.OrcSerde;
 import org.apache.hadoop.hive.serde.Constants;
 import org.apache.log4j.Logger;
+import org.apache.storm.hdfs.bolt.rotation.FileRotationPolicy;
 import org.apache.thrift.TException;
 import org.codehaus.jettison.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import scala.Int;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -57,32 +60,11 @@ public class KafkaHiveHdfsTopologyTest {
     private PropertyParser propertyParser;
     private static final String PROP_FILE = "local.properties";
 
-    // Hive static
-    private static final String HIVE_DB_NAME = "default";
-    private static final String HIVE_TABLE_NAME = "test";
-    private static final String[] HIVE_COLS = {"id", "msg"};
-    private static final String[] HIVE_PARTITIONS = {"dt"};
-    private static final String HIVE_TABLE_LOC = new File("hive_test_table").getAbsolutePath();
-
-    // HDFS static
-    private static final String HDFS_OUTPUT_DIR = "/tmp/kafka_data";
-
-    // Zookeeper
     private ZookeeperLocalCluster zookeeperLocalCluster;
-
-    // Kafka
     private KafkaLocalBroker kafkaLocalBroker;
-
-    // Storm
     private StormLocalCluster stormLocalCluster;
-
-    // HDFS
     private HdfsLocalCluster hdfsLocalCluster;
-
-    // Hive MetaStore
     private HiveLocalMetaStore hiveLocalMetaStore;
-
-    // HiveServer2
     private HiveLocalServer2 hiveLocalServer2;
 
     @Before
@@ -106,10 +88,10 @@ public class KafkaHiveHdfsTopologyTest {
         hiveLocalMetaStore = new HiveLocalMetaStore();
         hiveLocalMetaStore.start();
 
+        // Start HiveServer2
         hiveLocalServer2 = new HiveLocalServer2();
         hiveLocalServer2.start();
-
-        // Start Kafka
+        
         // Start Kafka
         kafkaLocalBroker = new KafkaLocalBroker(propertyParser.getProperty(ConfigVars.KAFKA_TOPIC_KEY),
                 propertyParser.getProperty(ConfigVars.KAFKA_TEST_TEMP_DIR_KEY),
@@ -140,7 +122,8 @@ public class KafkaHiveHdfsTopologyTest {
 
         // Stop HiveServer2
         hiveLocalServer2.stop(true);
-        FileUtils.deleteFolder(HIVE_TABLE_LOC);
+        FileUtils.deleteFolder(new File(propertyParser.getProperty(
+                ConfigVars.HIVE_TEST_TABLE_LOCATION_KEY)).getAbsolutePath());
 
         // Stop HDFS
         hdfsLocalCluster.stop(true);
@@ -152,7 +135,9 @@ public class KafkaHiveHdfsTopologyTest {
     public void createTable() throws TException {
         HiveMetaStoreClient hiveClient = new HiveMetaStoreClient(hiveLocalMetaStore.getConf());
 
-        hiveClient.dropTable(HIVE_DB_NAME, HIVE_TABLE_NAME, true, true);
+        hiveClient.dropTable(propertyParser.getProperty(ConfigVars.HIVE_BOLT_DATABASE_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY),
+                true, true);
 
         // Define the cols
         List<FieldSchema> cols = new ArrayList<FieldSchema>();
@@ -160,7 +145,8 @@ public class KafkaHiveHdfsTopologyTest {
         cols.add(new FieldSchema("msg", Constants.STRING_TYPE_NAME, ""));
 
         // Values for the StorageDescriptor
-        String location = HIVE_TABLE_LOC;
+        String location = new File(propertyParser.getProperty(
+                ConfigVars.HIVE_TEST_TABLE_LOCATION_KEY)).getAbsolutePath();
         String inputFormat = "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat";
         String outputFormat = "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat";
         int numBuckets = 16;
@@ -184,8 +170,8 @@ public class KafkaHiveHdfsTopologyTest {
 
         // Define the table
         Table tbl = new Table();
-        tbl.setDbName(HIVE_DB_NAME);
-        tbl.setTableName(HIVE_TABLE_NAME);
+        tbl.setDbName(propertyParser.getProperty(ConfigVars.HIVE_BOLT_DATABASE_KEY));
+        tbl.setTableName(propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY));
         tbl.setSd(sd);
         tbl.setOwner(System.getProperty("user.name"));
         tbl.setParameters(new HashMap<String, String>());
@@ -200,11 +186,12 @@ public class KafkaHiveHdfsTopologyTest {
         hiveClient.createTable(tbl);
 
         // Describe the table
-        Table createdTable = hiveClient.getTable(HIVE_DB_NAME, HIVE_TABLE_NAME);
+        Table createdTable = hiveClient.getTable(propertyParser.getProperty(ConfigVars.HIVE_BOLT_DATABASE_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY));
         LOG.info("HIVE: Created Table: " + createdTable.toString());
     }
 
-    public void runStormKafkaHiveHdfsTopology() {
+    public void runStormKafkaHiveHdfsTopology() throws IOException {
         LOG.info("STORM: Starting Topology: " + propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
         TopologyBuilder builder = new TopologyBuilder();
 
@@ -217,13 +204,43 @@ public class KafkaHiveHdfsTopologyTest {
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_SCHEME_CLASS_KEY));
 
-        ConfigureHdfsBolt.configureHdfsBolt(builder, ",", HDFS_OUTPUT_DIR, hdfsLocalCluster.getHdfsUriString(),
-                "hdfsbolt",
-                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY));
-        ConfigureHiveBolt.configureHiveStreamingBolt(builder, HIVE_COLS, HIVE_PARTITIONS, 
-                hiveLocalMetaStore.getMetaStoreUri(), HIVE_DB_NAME, HIVE_TABLE_NAME,
-                "hivebolt",
-                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY));
+        // Configure the HdfsBolt
+        FileRotationPolicy fileRotationPolicy = ConfigureHdfsBolt.configureFileRotationPolicy(PROP_FILE);
+        ConfigureHdfsBolt.configureHdfsBolt(builder,
+                propertyParser.getProperty(ConfigVars.HDFS_BOLT_FIELD_DELIMITER_KEY),
+                propertyParser.getProperty(ConfigVars.HDFS_BOLT_OUTPUT_LOCATION_KEY), 
+                hdfsLocalCluster.getHdfsUriString(),
+                propertyParser.getProperty(ConfigVars.HDFS_BOLT_NAME_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_BOLT_PARALLELISM_KEY)),
+                fileRotationPolicy,
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_BOLT_SYNC_COUNT_KEY)));
+        
+        // Configure the HiveBolt
+        ConfigureHiveBolt.configureHiveStreamingBolt(builder,
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_COLUMN_LIST_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_PARTITION_LIST_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_COLUMN_PARTITION_LIST_DELIMITER_KEY),
+                hiveLocalMetaStore.getMetaStoreUri(),
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_DATABASE_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY),
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_NAME_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_PARALLELISM_KEY)),
+                Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.HIVE_BOLT_AUTO_CREATE_PARTITIONS_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_TXNS_PER_BATCH_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_MAX_OPEN_CONNECTIONS_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_BATCH_SIZE_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_IDLE_TIMEOUT_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_HEARTBEAT_INTERVAL)));
+        
+        
+        // Storm Topology Config
+        Config stormConfig = StormConfig.createStormConfig(
+                Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS)));
+
+        // Submit the topology
         stormLocalCluster.submitTopology(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME), new Config(), builder.createTopology());
     }
 
@@ -233,9 +250,10 @@ public class KafkaHiveHdfsTopologyTest {
         LOG.info("HIVE: Loading the Hive JDBC Driver");
         Class.forName("org.apache.hive.jdbc.HiveDriver");
 
-        Connection con = DriverManager.getConnection("jdbc:hive2://localhost:" + hiveLocalServer2.getHiveServerThriftPort() + "/" + HIVE_DB_NAME, "user", "pass");
+        Connection con = DriverManager.getConnection("jdbc:hive2://localhost:" + hiveLocalServer2.getHiveServerThriftPort() + "/" + 
+                propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY), "user", "pass");
 
-        String selectStmt = "SELECT * FROM " + HIVE_TABLE_NAME;
+        String selectStmt = "SELECT * FROM " + propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY);
         Statement stmt = con.createStatement();
 
         LOG.info("HIVE: Running Select Statement: " + selectStmt);

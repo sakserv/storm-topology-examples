@@ -19,7 +19,9 @@ import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import com.github.sakserv.config.ConfigVars;
 import com.github.sakserv.config.PropertyParser;
+import com.github.sakserv.storm.config.StormConfig;
 import com.github.sakserv.storm.scheme.JsonScheme;
+import org.apache.storm.hdfs.bolt.rotation.FileRotationPolicy;
 
 
 public class KafkaHdfsTopology {
@@ -28,34 +30,49 @@ public class KafkaHdfsTopology {
 
         //TODO: Get rid of args and hardcoded properties file
         
-        if (args.length < 7) {
+        if (args.length < 2) {
             System.out.println("USAGE: storm jar </path/to/topo.jar> <com.package.TopologyMainClass> " +
-                    "<topo_display_name> <zookeeper_host:port[,zookeeper_host:port]> " +
-                    "<kafka_topic_name> <offset_time_to_start_from> <hdfs_field_delimiter> " +
-                    "<hdfs_output_path> <hdfs_uri>");
+                    "<topo_display_name> </path/to/config.properties>");
             System.exit(1);
         }
+        String stormTopologyName = args[0];
+        String propFilePath = args[1];
 
         // Parse the properties file
         PropertyParser propertyParser = new PropertyParser();
-        propertyParser.parsePropsFile("local.properties");
+        propertyParser.parsePropsFile(propFilePath);
 
         TopologyBuilder builder = new TopologyBuilder();
 
         // Setup the Kafka Spout
-        ConfigureKafkaSpout.configureKafkaSpout(builder, args[1], args[2], args[3], 1, "kafkaspout",
+        ConfigureKafkaSpout.configureKafkaSpout(builder,
+                propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_TOPIC_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_START_OFFSET_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_PARALLELISM_KEY)),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_SCHEME_CLASS_KEY));
 
-        // Setup the HDFS Bolt
-        ConfigureHdfsBolt.configureHdfsBolt(builder, args[4], args[5], args[6], "hdfsbolt", "kafkaspout");
 
-        // Topology
-        Config conf = new Config();
-        conf.setDebug(true);
-        conf.setNumWorkers(1);
+        // Configure the HdfsBolt
+        FileRotationPolicy fileRotationPolicy = ConfigureHdfsBolt.configureFileRotationPolicy(propFilePath);
+        ConfigureHdfsBolt.configureHdfsBolt(builder,
+                propertyParser.getProperty(ConfigVars.HDFS_BOLT_FIELD_DELIMITER_KEY),
+                propertyParser.getProperty(ConfigVars.HDFS_BOLT_OUTPUT_LOCATION_KEY),
+                propertyParser.getProperty(ConfigVars.HDFS_BOLT_DFS_URI_KEY),
+                propertyParser.getProperty(ConfigVars.HDFS_BOLT_NAME_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_BOLT_PARALLELISM_KEY)),
+                fileRotationPolicy,
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_BOLT_SYNC_COUNT_KEY)));
+
+        // Storm Topology Config
+        Config stormConfig = StormConfig.createStormConfig(
+                Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS)));
 
         // Submit the topology
-        StormSubmitter.submitTopologyWithProgressBar(args[0], conf, builder.createTopology());
+        StormSubmitter.submitTopologyWithProgressBar(stormTopologyName, stormConfig, builder.createTopology());
 
     }
 }

@@ -33,8 +33,7 @@ public class ConfigureKafkaSpout {
                                            String kafkaStartOffset, int parallelismHint, String spoutName,
                                            String spoutScheme) {
 
-        LOG.info("STORM: Configuring the KafkaSpout");
-        LOG.info("KAFKA: kafka offset: " + kafkaStartOffset);
+        LOG.info("KAFKASPOUT: Configuring the KafkaSpout");
 
         // Configure the KafkaSpout
         SpoutConfig spoutConfig = new SpoutConfig(new ZkHosts(zkHostString),
@@ -60,10 +59,10 @@ public class ConfigureKafkaSpout {
         // Allow for passing in an offset time
         // startOffsetTime has a bug that ignores the special -2 value
         if(kafkaStartOffset.equals("-2")) {
-            LOG.info("KAFKA: Starting from beginning");
+            LOG.info("KAFKASPOUT: Starting from beginning");
             spoutConfig.forceFromStart = true;
         } else if (kafkaStartOffset != null) {
-            LOG.info("KAFKA: NOT Starting from beginning");
+            LOG.info("KAFKASPOUT: NOT Starting from beginning");
             spoutConfig.startOffsetTime = Long.parseLong(kafkaStartOffset);
         }
         

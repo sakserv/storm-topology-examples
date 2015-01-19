@@ -10,6 +10,7 @@ import com.github.sakserv.minicluster.impl.KafkaLocalBroker;
 import com.github.sakserv.minicluster.impl.MongodbLocalServer;
 import com.github.sakserv.minicluster.impl.StormLocalCluster;
 import com.github.sakserv.minicluster.impl.ZookeeperLocalCluster;
+import com.github.sakserv.storm.config.StormConfig;
 import com.github.sakserv.storm.scheme.JsonScheme;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -114,10 +115,15 @@ public class KafkaMongodbTopologyTest {
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.MONGO_BOLT_PARALLELISM_KEY)),
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
                 propertyParser.getProperty(ConfigVars.MONGO_BOLT_NAME_KEY));
+
+        // Storm Topology Config
+        Config stormConfig = StormConfig.createStormConfig(
+                Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS)));
         
         // Submit the topology
         stormLocalCluster.submitTopology(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME),
-                new Config(), builder.createTopology());
+                stormConfig, builder.createTopology());
     }
     
     public void validateMongo() throws UnknownHostException {

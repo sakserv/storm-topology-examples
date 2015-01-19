@@ -31,12 +31,59 @@ public class ConfigVars {
     public static final String KAFKA_SPOUT_PARALLELISM_KEY = "kafka.spout.parallelism";
     public static final String KAFKA_SPOUT_SCHEME_CLASS_KEY = "kafka.spout.scheme.class";
     
-    // Kafka Test
+    // Kafka Test - used for Unit Testing
     public static final String KAFKA_TEST_TEMP_DIR_KEY = "kafka.temp.dir";
     public static final String KAFKA_TEST_BROKER_LIST_KEY = "kafka.broker.list";
     public static final String KAFKA_TEST_BROKER_ID_KEY = "kafka.broker.id";
     public static final String KAFKA_TEST_MSG_COUNT_KEY = "kafka.test.msg.count";
     public static final String KAFKA_TEST_MSG_PAYLOAD_KEY = "kafka.test.msg.payload";
+    
+    // Hive
+    public static final String HIVE_METASTORE_URI_KEY = "hive.metastore.uri";
+    
+    // Hive Bolt
+    public static final String HIVE_BOLT_DATABASE_KEY = "hive.bolt.database";
+    public static final String HIVE_BOLT_TABLE_KEY = "hive.bolt.table";
+    public static final String HIVE_BOLT_NAME_KEY = "hive.bolt.name";
+    public static final String HIVE_BOLT_COLUMN_LIST_KEY = "hive.bolt.column.list";
+    public static final String HIVE_BOLT_PARTITION_LIST_KEY = "hive.bolt.partition.list";
+    public static final String HIVE_BOLT_COLUMN_PARTITION_LIST_DELIMITER_KEY = 
+            "hive.bolt.column.partition.list.delimiter";
+    public static final String HIVE_BOLT_PARALLELISM_KEY = "hive.bolt.parallelism";
+    public static final String HIVE_BOLT_AUTO_CREATE_PARTITIONS_KEY = "hive.bolt.auto.create.partitions";
+    public static final String HIVE_BOLT_TXNS_PER_BATCH_KEY = "hive.bolt.txns.per.batch";
+    public static final String HIVE_BOLT_MAX_OPEN_CONNECTIONS_KEY = "hive.bolt.max.open.connections";
+    public static final String HIVE_BOLT_BATCH_SIZE_KEY = "hive.bolt.batch.size";
+    public static final String HIVE_BOLT_IDLE_TIMEOUT_KEY = "hive.bolt.idle.timeout";
+    public static final String HIVE_BOLT_HEARTBEAT_INTERVAL = "hive.bolt.heartbeat.interval";
+    
+    // Hive Test - used for Unit Testing
+    public static final String HIVE_TEST_TABLE_LOCATION_KEY = "hive.test.table.location";
+    
+    // HDFS Bolt
+    public static final String HDFS_BOLT_DFS_URI_KEY = "hdfs.bolt.dfs.uri";
+    public static final String HDFS_BOLT_NAME_KEY = "hdfs.bolt.name";
+    public static final String HDFS_BOLT_FIELD_DELIMITER_KEY = "hdfs.bolt.field.delimiter";
+    public static final String HDFS_BOLT_OUTPUT_LOCATION_KEY = "hdfs.bolt.output.location";
+    public static final String HDFS_BOLT_PARALLELISM_KEY = "hdfs.bolt.parallelism";
+    public static final String HDFS_BOLT_SYNC_COUNT_KEY = "hdfs.bolt.sync.count";
+    
+    // HDFS Bolt RotationPolicy - Time Based
+    public static final String HDFS_BOLT_USE_TIME_BASED_FILEROTATIONPOLICY_KEY = 
+            "hdfs.bolt.use.time.based.filerotationpolicy";
+    public static final String HDFS_BOLT_USE_TIME_BASED_FILEROTATIONPOLICY_UNIT_KEY =
+            "hdfs.bolt.use.time.based.filerotationpolicy.unit";
+    public static final String HDFS_BOLT_USE_TIME_BASED_FILEROTATIONPOLICY_DURATION_KEY =
+            "hdfs.bolt.use.time.based.filerotationpolicy.duration";
+
+    // HDFS Bolt RotationPolicy - Size Based
+    public static final String HDFS_BOLT_USE_SIZE_BASED_FILEROTATIONPOLICY_KEY =
+            "hdfs.bolt.use.size.based.filerotationpolicy";
+    public static final String HDFS_BOLT_USE_SIZE_BASED_FILEROTATIONPOLICY_UNIT_KEY =
+            "hdfs.bolt.use.size.based.filerotationpolicy.unit";
+    public static final String HDFS_BOLT_USE_SIZE_BASED_FILEROTATIONPOLICY_SIZE_KEY =
+            "hdfs.bolt.use.size.based.filerotationpolicy.size";
+
 
     // MongoDB
     public static final String MONGO_IP_KEY = "mongo.ip";
@@ -50,5 +97,7 @@ public class ConfigVars {
     
     // Storm
     public static final String STORM_TOPOLOGY_NAME = "storm.topology.name";
+    public static final String STORM_ENABLE_DEBUG = "storm.enable.debug";
+    public static final String STORM_NUM_WORKERS = "storm.num.workers";
     
 }
