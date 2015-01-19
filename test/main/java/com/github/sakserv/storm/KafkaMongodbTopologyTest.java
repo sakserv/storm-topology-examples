@@ -3,6 +3,8 @@ package com.github.sakserv.storm;
 import backtype.storm.Config;
 import backtype.storm.spout.Scheme;
 import backtype.storm.topology.TopologyBuilder;
+import com.github.sakserv.config.ConfigVars;
+import com.github.sakserv.config.PropertyParser;
 import com.github.sakserv.kafka.KafkaProducerTest;
 import com.github.sakserv.minicluster.impl.KafkaLocalBroker;
 import com.github.sakserv.minicluster.impl.MongodbLocalServer;
@@ -19,6 +21,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Map;
 
@@ -34,10 +37,9 @@ public class KafkaMongodbTopologyTest {
 
     // Logger
     private static final Logger LOG = Logger.getLogger(KafkaHiveHdfsTopologyTest.class);
-
-    // Zookeeper static
-    private static final String DEFAULT_ZK_TEMP_DIR = "embedded_zk";
-    private static final int DEFAULT_ZK_PORT = 2181;
+    
+    // Properties file for tests
+    private static final String PROP_FILE = "local.properties";
     
     // Kafka static
     private static final String DEFAULT_LOG_DIR = "embedded_kafka";
@@ -67,10 +69,17 @@ public class KafkaMongodbTopologyTest {
     private MongodbLocalServer mongodbLocalServer;
     private KafkaLocalBroker kafkaLocalBroker;
     private StormLocalCluster stormCluster;
+    private PropertyParser propertyParser;
     
     @Before
-    public void setUp() {
-        zookeeperLocalCluster = new ZookeeperLocalCluster(DEFAULT_ZK_PORT, DEFAULT_ZK_TEMP_DIR);
+    public void setUp() throws IOException {
+        // Parse the properties file
+        propertyParser = new PropertyParser();
+        propertyParser.parsePropsFile(PROP_FILE);
+        
+        zookeeperLocalCluster = new ZookeeperLocalCluster(
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT)), 
+                propertyParser.getProperty(ConfigVars.ZOOKEEPER_TEMP_DIR_VAR));
         zookeeperLocalCluster.start();
 
         // Start Kafka
