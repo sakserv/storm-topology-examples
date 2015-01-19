@@ -16,6 +16,8 @@ package com.github.sakserv.storm;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
+import com.github.sakserv.config.ConfigVars;
+import com.github.sakserv.config.PropertyParser;
 import com.github.sakserv.kafka.KafkaProducerTest;
 import com.github.sakserv.minicluster.impl.*;
 import com.github.sakserv.minicluster.util.FileUtils;
@@ -50,6 +52,10 @@ public class KafkaHiveHdfsTopologyTest {
     
     // Logger
     private static final Logger LOG = Logger.getLogger(KafkaHiveHdfsTopologyTest.class);
+
+    // Properties file for tests
+    private PropertyParser propertyParser;
+    private static final String PROP_FILE = "local.properties";
 
     // Kafka static
     private static final String DEFAULT_LOG_DIR = "embedded_kafka";
@@ -90,7 +96,11 @@ public class KafkaHiveHdfsTopologyTest {
     private HiveLocalServer2 hiveLocalServer2;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
+
+        // Parse the properties file
+        propertyParser = new PropertyParser();
+        propertyParser.parsePropsFile(PROP_FILE);
 
         // Start ZK
         zkCluster = new ZookeeperLocalCluster();
@@ -200,7 +210,8 @@ public class KafkaHiveHdfsTopologyTest {
         LOG.info("STORM: Starting Topology: " + TEST_TOPOLOGY_NAME);
         TopologyBuilder builder = new TopologyBuilder();
         ConfigureKafkaSpout.configureKafkaSpout(builder, zkCluster.getZkConnectionString(), TEST_TOPIC, "-2", 1, 
-                "kafkaspout", new JsonScheme());
+                "kafkaspout",
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_SCHEME_CLASS_KEY));
         ConfigureHdfsBolt.configureHdfsBolt(builder, ",", HDFS_OUTPUT_DIR, hdfsCluster.getHdfsUriString());
         ConfigureHiveBolt.configureHiveStreamingBolt(builder, HIVE_COLS, HIVE_PARTITIONS, hiveLocalMetaStore.getMetaStoreUri(), HIVE_DB_NAME, HIVE_TABLE_NAME);
         stormCluster.submitTopology(TEST_TOPOLOGY_NAME, new Config(), builder.createTopology());
@@ -254,7 +265,7 @@ public class KafkaHiveHdfsTopologyTest {
         // Create the Hive table, produce test messages to Kafka, start the kafka-hive-hdfs Storm topology
         // Sleep 10 seconds to let processing complete
         createTable();
-        KafkaProducerTest.produceMessages(LOCALHOST_BROKER, TEST_TOPIC, 50);
+        KafkaProducerTest.produceMessages(LOCALHOST_BROKER, TEST_TOPIC, 50, propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_PAYLOAD_KEY));
         runStormKafkaHiveHdfsTopology();
         try {
             Thread.sleep(10000L);

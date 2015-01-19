@@ -39,20 +39,8 @@ public class KafkaMongodbTopologyTest {
     private static final Logger LOG = Logger.getLogger(KafkaHiveHdfsTopologyTest.class);
     
     // Properties file for tests
+    private PropertyParser propertyParser;
     private static final String PROP_FILE = "local.properties";
-    
-    // Kafka static
-    private static final String DEFAULT_LOG_DIR = "embedded_kafka";
-    private static final String TEST_TOPIC = "test-topic";
-    private static final Integer KAFKA_PORT = 9092;
-    private static final String LOCALHOST_BROKER = "localhost:" + KAFKA_PORT.toString();
-    private static final int BROKER_ID = 1;
-    private static final int DEFAULT_NUM_MESSAGES = 50;
-    private static final String DEFAULT_OFFSET = "-2";
-    private static final String DEFAULT_KAFKA_MSG_PAYLOAD = "test-message1";
-    private static final String DEFAULT_KAFKASPOUT_NAME = "kafkaspout";
-    private static final int DEFAULT_KAFKASPOUT_PARALLELISM = 1;
-    private static final Scheme DEFAULT_KAFKASPOUT_SCHEME = new JsonScheme();
 
     // MongoDB static
     private static final String DEFAULT_MONGODB_DATABASE_NAME = "test_database";
@@ -69,7 +57,6 @@ public class KafkaMongodbTopologyTest {
     private MongodbLocalServer mongodbLocalServer;
     private KafkaLocalBroker kafkaLocalBroker;
     private StormLocalCluster stormCluster;
-    private PropertyParser propertyParser;
     
     @Before
     public void setUp() throws IOException {
@@ -77,16 +64,21 @@ public class KafkaMongodbTopologyTest {
         propertyParser = new PropertyParser();
         propertyParser.parsePropsFile(PROP_FILE);
         
+        // Start Zookeeper
         zookeeperLocalCluster = new ZookeeperLocalCluster(
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT)), 
-                propertyParser.getProperty(ConfigVars.ZOOKEEPER_TEMP_DIR_VAR));
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)), 
+                propertyParser.getProperty(ConfigVars.ZOOKEEPER_TEMP_DIR_KEY));
         zookeeperLocalCluster.start();
 
         // Start Kafka
-        kafkaLocalBroker = new KafkaLocalBroker(TEST_TOPIC, DEFAULT_LOG_DIR, KAFKA_PORT, BROKER_ID, 
-                zookeeperLocalCluster.getZkConnectionString());
+        kafkaLocalBroker = new KafkaLocalBroker(propertyParser.getProperty(ConfigVars.KAFKA_TOPIC_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_TEST_TEMP_DIR_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_PORT_KEY)),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_BROKER_ID_KEY)),
+                propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY));
         kafkaLocalBroker.start();
         
+        // Start MongoDB
         mongodbLocalServer = new MongodbLocalServer(DEFAULT_MONGODB_IP, DEFAULT_MONGOD_PORT);
         mongodbLocalServer.start();
 
@@ -113,13 +105,26 @@ public class KafkaMongodbTopologyTest {
     public void runStormKafkaMongodbTopology() {
         LOG.info("STORM: Starting Topology: " + TEST_TOPOLOGY_NAME);
         TopologyBuilder builder = new TopologyBuilder();
-        ConfigureKafkaSpout.configureKafkaSpout(builder, zookeeperLocalCluster.getZkConnectionString(), 
-                TEST_TOPIC, DEFAULT_OFFSET, DEFAULT_KAFKASPOUT_PARALLELISM, DEFAULT_KAFKASPOUT_NAME,
-                DEFAULT_KAFKASPOUT_SCHEME);
         
-        ConfigureMongodbBolt.configureMongodbBolt(builder, mongodbLocalServer.getBindIp(), 
-                mongodbLocalServer.getBindPort(), DEFAULT_MONGODB_DATABASE_NAME, DEFAULT_MONGODB_COLLECTION_NAME,
-                DEFAULT_MONGOBOLT_PARALLELISM, DEFAULT_KAFKASPOUT_NAME, DEFAULT_MONGOBOLT_NAME);
+        // Configure the KafkaSpout
+        ConfigureKafkaSpout.configureKafkaSpout(builder, 
+                propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_TOPIC_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_START_OFFSET_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_PARALLELISM_KEY)),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_SCHEME_CLASS_KEY));
+        
+        // Configure the MongoBolt
+        ConfigureMongodbBolt.configureMongodbBolt(builder, 
+                mongodbLocalServer.getBindIp(), 
+                mongodbLocalServer.getBindPort(), 
+                DEFAULT_MONGODB_DATABASE_NAME, 
+                DEFAULT_MONGODB_COLLECTION_NAME,
+                DEFAULT_MONGOBOLT_PARALLELISM,
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY), DEFAULT_MONGOBOLT_NAME);
+        
+        // Submit the topology
         stormCluster.submitTopology(TEST_TOPOLOGY_NAME, new Config(), builder.createTopology());
     }
     
@@ -129,14 +134,14 @@ public class KafkaMongodbTopologyTest {
         DBCollection collection = getMongoCollection(db, DEFAULT_MONGODB_COLLECTION_NAME);
 
         LOG.info("MONGODB: Number of items in collection: " + collection.count());
-        assertEquals(DEFAULT_NUM_MESSAGES, collection.count());
+        assertEquals(Long.parseLong(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)), collection.count());
 
         DBCursor cursor = collection.find();
         int counter = 0;
         while(cursor.hasNext()) {
             Map msg = cursor.next().toMap();
             assertEquals(counter, Integer.parseInt(msg.get("id").toString()));
-            assertEquals(DEFAULT_KAFKA_MSG_PAYLOAD, msg.get("msg").toString());
+            assertEquals(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_PAYLOAD_KEY), msg.get("msg").toString());
             assertThat(msg.get("dt").toString(), doesMatchRegex("\\d{4}-\\d{2}-\\d{2}"));
             counter++;
             LOG.info("MONGODB: Document output: " + msg);
@@ -157,9 +162,12 @@ public class KafkaMongodbTopologyTest {
     }
     
     @Test
-    public void testKafkaMongodbTopology() throws JSONException, UnknownHostException {
+    public void testKafkaMongodbTopology() throws JSONException, IOException {
 
-        KafkaProducerTest.produceMessages(LOCALHOST_BROKER, TEST_TOPIC, DEFAULT_NUM_MESSAGES);
+        KafkaProducerTest.produceMessages(propertyParser.getProperty(ConfigVars.KAFKA_TEST_BROKER_LIST_KEY),
+                propertyParser.getProperty(ConfigVars.KAFKA_TOPIC_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)),
+                propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_PAYLOAD_KEY));
         runStormKafkaMongodbTopology();
         try {
             Thread.sleep(5000L);

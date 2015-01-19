@@ -16,8 +16,26 @@ package com.github.sakserv.config;
 public class ConfigVars {
     
     // Zookeeper
-    public static final String ZOOKEEPER_TEMP_DIR_VAR = "zookeeper.temp.dir";
-    public static final String ZOOKEEPER_PORT = "zookeeper.port";
-    public static final String ZOOKEEPER_CONNECTION_STRING = "zookeeper.connection.string";
+    public static final String ZOOKEEPER_TEMP_DIR_KEY = "zookeeper.temp.dir";
+    public static final String ZOOKEEPER_PORT_KEY = "zookeeper.port";
+    public static final String ZOOKEEPER_CONNECTION_STRING_KEY = "zookeeper.connection.string";
+    
+    // Kafka
+    public static final String KAFKA_TOPIC_KEY = "kafka.topic";
+    public static final String KAFKA_PORT_KEY = "kafka.port";
+    
+    // Kafka Spout
+    public static final String KAFKA_SPOUT_START_OFFSET_KEY = "kafka.spout.start.offset";
+    public static final String KAFKA_SPOUT_NAME_KEY = "kafka.spout.name";
+    public static final String KAFKA_SPOUT_PARALLELISM_KEY = "kafka.spout.parallelism";
+    public static final String KAFKA_SPOUT_SCHEME_CLASS_KEY = "kafka.spout.scheme.class";
+    
+    // Kafka Test
+    public static final String KAFKA_TEST_TEMP_DIR_KEY = "kafka.temp.dir";
+    public static final String KAFKA_TEST_BROKER_LIST_KEY = "kafka.broker.list";
+    public static final String KAFKA_TEST_BROKER_ID_KEY = "kafka.broker.id";
+    public static final String KAFKA_TEST_MSG_COUNT_KEY = "kafka.test.msg.count";
+    public static final String KAFKA_TEST_MSG_PAYLOAD_KEY = "kafka.test.msg.payload";
+    
     
 }

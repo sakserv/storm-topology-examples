@@ -17,6 +17,8 @@ package com.github.sakserv.storm;
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
+import com.github.sakserv.config.ConfigVars;
+import com.github.sakserv.config.PropertyParser;
 import com.github.sakserv.storm.scheme.JsonScheme;
 
 
@@ -24,6 +26,8 @@ public class KafkaHiveTopology {
 
     public static void main(String[] args) throws Exception {
 
+        //TODO: Get rid of args and hardcoded properties file
+        
         if (args.length < 7) {
             System.out.println("USAGE: storm jar </path/to/topo.jar> <com.package.TopologyMainClass> " +
                     "<topo_display_name> <zookeeper_host:port[,zookeeper_host:port]> " +
@@ -32,10 +36,15 @@ public class KafkaHiveTopology {
             System.exit(1);
         }
 
+        // Parse the properties file
+        PropertyParser propertyParser = new PropertyParser();
+        propertyParser.parsePropsFile("local.properties");
+
         TopologyBuilder builder = new TopologyBuilder();
 
         // Setup the Kafka Spout
-        ConfigureKafkaSpout.configureKafkaSpout(builder, args[1], args[2], args[3], 1, "kafkaspout", new JsonScheme());
+        ConfigureKafkaSpout.configureKafkaSpout(builder, args[1], args[2], args[3], 1, "kafkaspout",
+                propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_SCHEME_CLASS_KEY));
 
         // Setup the Hive Bolt
         String[] cols = args[4].split(",");

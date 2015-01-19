@@ -31,17 +31,22 @@ public class ConfigureKafkaSpout {
 
     public static void configureKafkaSpout(TopologyBuilder builder, String zkHostString, String kafkaTopic, 
                                            String kafkaStartOffset, int parallelismHint, String spoutName,
-                                           Scheme spoutScheme) {
+                                           String spoutScheme) {
 
-        LOG.info("HDFS: Configuring the KafkaSpout");
+        LOG.info("STORM: Configuring the KafkaSpout");
+        LOG.info("KAFKA: kafka offset: " + kafkaStartOffset);
 
         // Configure the KafkaSpout
         SpoutConfig spoutConfig = new SpoutConfig(new ZkHosts(zkHostString),
                 kafkaTopic,      // Kafka topic to read from
                 "/" + kafkaTopic, // Root path in Zookeeper for the spout to store consumer offsets
                 UUID.randomUUID().toString());  // ID for storing consumer offsets in Zookeeper
-        //spoutConfig.scheme = new SchemeAsMultiScheme(new StringScheme());
-        spoutConfig.scheme = new SchemeAsMultiScheme(spoutScheme);
+        try {
+            spoutConfig.scheme = new SchemeAsMultiScheme(getSchemeFromClassName(spoutScheme));
+        } catch(Exception e) {
+            LOG.error("ERROR: Unable to create instance of scheme: " + spoutScheme);
+            e.printStackTrace();
+        }
         setKafkaOffset(spoutConfig, kafkaStartOffset);
         
         KafkaSpout kafkaSpout = new KafkaSpout(spoutConfig);
@@ -54,11 +59,17 @@ public class ConfigureKafkaSpout {
     private static void setKafkaOffset(SpoutConfig spoutConfig, String kafkaStartOffset) {
         // Allow for passing in an offset time
         // startOffsetTime has a bug that ignores the special -2 value
-        if(kafkaStartOffset == "-2") {
+        if(kafkaStartOffset.equals("-2")) {
+            LOG.info("KAFKA: Starting from beginning");
             spoutConfig.forceFromStart = true;
         } else if (kafkaStartOffset != null) {
+            LOG.info("KAFKA: NOT Starting from beginning");
             spoutConfig.startOffsetTime = Long.parseLong(kafkaStartOffset);
         }
         
+    }
+    
+    private static Scheme getSchemeFromClassName(String spoutSchemeCls) throws Exception {
+        return (Scheme)Class.forName(spoutSchemeCls).getConstructor().newInstance();
     }
 }

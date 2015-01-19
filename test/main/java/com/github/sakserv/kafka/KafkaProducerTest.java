@@ -1,5 +1,7 @@
 package com.github.sakserv.kafka;
 
+import com.github.sakserv.config.ConfigVars;
+import com.github.sakserv.config.PropertyParser;
 import com.github.sakserv.datetime.GenerateRandomDay;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
@@ -8,6 +10,7 @@ import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
+import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -17,7 +20,8 @@ public class KafkaProducerTest {
 
     private static final Logger LOG = Logger.getLogger(KafkaProducerTest.class);
 
-    public static void produceMessages(String brokerList, String topic, int msgCount) throws JSONException {
+    public static void produceMessages(String brokerList, String topic, int msgCount, String msgPayload) throws JSONException, IOException {
+        
         // Add Producer properties and created the Producer
         ProducerConfig config = new ProducerConfig(setKafkaBrokerProps(brokerList));
         Producer<String, String> producer = new Producer<String, String>(config);
@@ -28,7 +32,7 @@ public class KafkaProducerTest {
             // Create the JSON object
             JSONObject obj = new JSONObject();
             obj.put("id", String.valueOf(i));
-            obj.put("msg", "test-message" + 1);
+            obj.put("msg", msgPayload);
             obj.put("dt", GenerateRandomDay.genRandomDay());
             String payload = obj.toString();
 
