@@ -57,9 +57,6 @@ public class KafkaHiveHdfsTopologyTest {
     private PropertyParser propertyParser;
     private static final String PROP_FILE = "local.properties";
 
-    // Storm static
-    private static final String TEST_TOPOLOGY_NAME = "test";
-
     // Hive static
     private static final String HIVE_DB_NAME = "default";
     private static final String HIVE_TABLE_NAME = "test";
@@ -132,7 +129,7 @@ public class KafkaHiveHdfsTopologyTest {
 
         // Stop Storm
         try {
-            stormLocalCluster.stop(TEST_TOPOLOGY_NAME);
+            stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
         } catch(IllegalStateException e) { }
 
         // Stop Kafka
@@ -208,7 +205,7 @@ public class KafkaHiveHdfsTopologyTest {
     }
 
     public void runStormKafkaHiveHdfsTopology() {
-        LOG.info("STORM: Starting Topology: " + TEST_TOPOLOGY_NAME);
+        LOG.info("STORM: Starting Topology: " + propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
         TopologyBuilder builder = new TopologyBuilder();
 
         // Configure the KafkaSpout
@@ -227,7 +224,7 @@ public class KafkaHiveHdfsTopologyTest {
                 hiveLocalMetaStore.getMetaStoreUri(), HIVE_DB_NAME, HIVE_TABLE_NAME,
                 "hivebolt",
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY));
-        stormLocalCluster.submitTopology(TEST_TOPOLOGY_NAME, new Config(), builder.createTopology());
+        stormLocalCluster.submitTopology(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME), new Config(), builder.createTopology());
     }
 
     public void validateHiveResults() throws ClassNotFoundException, SQLException {
@@ -293,7 +290,7 @@ public class KafkaHiveHdfsTopologyTest {
         }
 
         // To ensure transactions and files are closed, stop storm
-        stormLocalCluster.stop(TEST_TOPOLOGY_NAME);
+        stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
         try {
             Thread.sleep(10000L);
         } catch (InterruptedException e) {
