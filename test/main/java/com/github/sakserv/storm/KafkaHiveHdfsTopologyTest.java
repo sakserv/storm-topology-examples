@@ -231,10 +231,12 @@ public class KafkaHiveHdfsTopologyTest {
     public void createTmpHiveHdfs() throws IOException {
         String hdfsSessionPath = propertyParser.getProperty(ConfigVars.HIVE_TEST_HDFS_SESSION_PATH_KEY);
         LOG.info("HDFS: Creating " + hdfsSessionPath);
-
+        
         // Get the filesystem handle and a list of files written by the test
         FileStatus fileStatus;
         FileSystem hdfsFsHandle = hdfsLocalCluster.getHdfsFileSystemHandle();
+
+        LOG.info("HDFS: FileSystem URI" + hdfsLocalCluster.getHdfsUriString());
 
         hdfsFsHandle.delete(new Path(hdfsSessionPath), true);
 
@@ -245,6 +247,19 @@ public class KafkaHiveHdfsTopologyTest {
 
         fileStatus = hdfsFsHandle.getFileStatus(new Path(hdfsSessionPath));
         LOG.info("HDFS: FILESTATUS: " + fileStatus.toString());
+
+        hdfsFsHandle.close();
+    }
+    
+    public void listTmpHiveHdfs() throws IOException {
+
+        String hdfsSessionPath = propertyParser.getProperty(ConfigVars.HIVE_TEST_HDFS_SESSION_PATH_KEY);
+
+        // Get the filesystem handle and a list of files written by the test
+        FileStatus fileStatus;
+        FileSystem hdfsFsHandle = hdfsLocalCluster.getHdfsFileSystemHandle();
+        fileStatus = hdfsFsHandle.getFileStatus(new Path(hdfsSessionPath));
+        LOG.info("HDFS: FILESTATUS AFTER: " + fileStatus.toString());
 
         hdfsFsHandle.close();
     }
@@ -363,7 +378,7 @@ public class KafkaHiveHdfsTopologyTest {
         }
 
         // Validate Hive table is populated
-        hiveLocalServer2.dumpConfig();
+        listTmpHiveHdfs();
         validateHiveResults();
         try {
             Thread.sleep(10000L);
