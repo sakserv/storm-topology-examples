@@ -45,11 +45,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -225,43 +225,37 @@ public class KafkaHiveHdfsTopologyTest {
             count++;
         }
         // Validate the number of rows matches the number of kafka messages
-        //assertEquals(Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)), count);
+        assertEquals(Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)), count);
     }
 
-    public void createTmpHiveHdfs() throws IOException {
-        String hdfsSessionPath = propertyParser.getProperty(ConfigVars.HIVE_TEST_HDFS_SESSION_PATH_KEY);
-        LOG.info("HDFS: Creating " + hdfsSessionPath);
+    public void createTmpHive() throws IOException {
+        String sessionPath = propertyParser.getProperty(ConfigVars.HIVE_TEST_HDFS_SESSION_PATH_KEY);
+        LOG.info("HDFS: Creating " + sessionPath + " locally and on HDFS");
         
         // Get the filesystem handle and a list of files written by the test
-        FileStatus fileStatus;
         FileSystem hdfsFsHandle = hdfsLocalCluster.getHdfsFileSystemHandle();
 
-        LOG.info("HDFS: FileSystem URI" + hdfsLocalCluster.getHdfsUriString());
-
-        hdfsFsHandle.delete(new Path(hdfsSessionPath), true);
-
         FsPermission fsPerms = new FsPermission("777");
-        hdfsFsHandle.mkdirs(new Path(hdfsSessionPath), fsPerms);
-        hdfsFsHandle.setOwner(new Path(hdfsSessionPath), "hive", "hadoop");
-        hdfsFsHandle.setPermission(new Path(hdfsSessionPath), fsPerms);
+        hdfsFsHandle.mkdirs(new Path(sessionPath), fsPerms);
+        hdfsFsHandle.setOwner(new Path(sessionPath), "hive", "hadoop");
+        hdfsFsHandle.setPermission(new Path(sessionPath), fsPerms);
 
-        fileStatus = hdfsFsHandle.getFileStatus(new Path(hdfsSessionPath));
+        FileStatus fileStatus = hdfsFsHandle.getFileStatus(new Path(sessionPath));
         LOG.info("HDFS: FILESTATUS: " + fileStatus.toString());
 
         hdfsFsHandle.close();
-    }
-    
-    public void listTmpHiveHdfs() throws IOException {
 
-        String hdfsSessionPath = propertyParser.getProperty(ConfigVars.HIVE_TEST_HDFS_SESSION_PATH_KEY);
-
-        // Get the filesystem handle and a list of files written by the test
-        FileStatus fileStatus;
-        FileSystem hdfsFsHandle = hdfsLocalCluster.getHdfsFileSystemHandle();
-        fileStatus = hdfsFsHandle.getFileStatus(new Path(hdfsSessionPath));
-        LOG.info("HDFS: FILESTATUS AFTER: " + fileStatus.toString());
-
-        hdfsFsHandle.close();
+        Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+        perms.add(PosixFilePermission.OWNER_READ);
+        perms.add(PosixFilePermission.OWNER_WRITE);
+        perms.add(PosixFilePermission.OWNER_EXECUTE);
+        perms.add(PosixFilePermission.GROUP_READ);
+        perms.add(PosixFilePermission.GROUP_WRITE);
+        perms.add(PosixFilePermission.GROUP_EXECUTE);
+        perms.add(PosixFilePermission.OTHERS_READ);
+        perms.add(PosixFilePermission.OTHERS_WRITE);
+        perms.add(PosixFilePermission.OTHERS_EXECUTE);
+        Files.setPosixFilePermissions(Paths.get(sessionPath), perms);
     }
 
     public void validateHdfsResults() throws IOException {
@@ -349,7 +343,8 @@ public class KafkaHiveHdfsTopologyTest {
     @Test
     public void testKafkaHiveHdfsTopology() throws TException, JSONException, ClassNotFoundException, SQLException, IOException {
         
-        createTmpHiveHdfs();
+        // Need to manually create /tmp/hive locally and on HDFS for hive session state data
+        createTmpHive();
 
         // Run the Kafka Producer
         KafkaProducerTest.produceMessages(propertyParser.getProperty(ConfigVars.KAFKA_TEST_BROKER_LIST_KEY),
@@ -378,7 +373,6 @@ public class KafkaHiveHdfsTopologyTest {
         }
 
         // Validate Hive table is populated
-        listTmpHiveHdfs();
         validateHiveResults();
         try {
             Thread.sleep(10000L);
