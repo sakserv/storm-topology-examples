@@ -22,3 +22,11 @@ echo -e "\n#### Installing and starting mongodb"
 cd /tmp/storm-topology-examples/
 cp bin/yum/mongodb.repo /etc/yum.repos.d/
 yum install mongodb-org -y
+service mongod start
+
+# Create the Kafka Topic
+/usr/hdp/current/kafka-broker/bin/kafka-topics.sh --create --topic test_topic --zookeeper localhost:2181 --partitions 1 --replication-factor 1
+
+# Create the Hive Table
+cd /tmp/storm-topology-examples/
+hive -f bin/hive/create_orc_table.sql
