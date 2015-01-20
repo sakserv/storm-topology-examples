@@ -33,7 +33,7 @@ public class KafkaHdfsTopology {
                     "</path/to/config.properties>");
             System.exit(1);
         }
-        String propFilePath = args[1];
+        String propFilePath = args[0];
 
         // Parse the properties file
         PropertyParser propertyParser = new PropertyParser();
