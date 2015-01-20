@@ -28,9 +28,7 @@ public class KafkaHiveTopology {
 
     public static void main(String[] args) throws Exception {
 
-        //TODO: Get rid of args and hardcoded properties file
-
-        if (args.length < 2) {
+        if (args.length < 1) {
             System.out.println("USAGE: storm jar </path/to/topo.jar> <com.package.TopologyMainClass> " +
                     "</path/to/config.properties>");
             System.exit(1);

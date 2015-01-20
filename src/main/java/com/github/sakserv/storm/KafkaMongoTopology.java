@@ -11,7 +11,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package com.github.sakserv.storm;
 
 import backtype.storm.Config;
@@ -20,12 +19,8 @@ import backtype.storm.topology.TopologyBuilder;
 import com.github.sakserv.config.ConfigVars;
 import com.github.sakserv.config.PropertyParser;
 import com.github.sakserv.storm.config.StormConfig;
-import com.github.sakserv.storm.scheme.JsonScheme;
-import org.apache.storm.hdfs.bolt.rotation.FileRotationPolicy;
 
-
-public class KafkaHdfsTopology {
-
+public class KafkaMongoTopology {
     public static void main(String[] args) throws Exception {
 
         if (args.length < 1) {
@@ -50,18 +45,17 @@ public class KafkaHdfsTopology {
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_SCHEME_CLASS_KEY));
 
-
-        // Configure the HdfsBolt
-        FileRotationPolicy fileRotationPolicy = ConfigureHdfsBolt.configureFileRotationPolicy(propFilePath);
-        ConfigureHdfsBolt.configureHdfsBolt(builder,
-                propertyParser.getProperty(ConfigVars.HDFS_BOLT_FIELD_DELIMITER_KEY),
-                propertyParser.getProperty(ConfigVars.HDFS_BOLT_OUTPUT_LOCATION_KEY),
-                propertyParser.getProperty(ConfigVars.HDFS_BOLT_DFS_URI_KEY),
-                propertyParser.getProperty(ConfigVars.HDFS_BOLT_NAME_KEY),
+        // Setup the Mongo Bolt
+        // Configure the MongoBolt
+        ConfigureMongodbBolt.configureMongodbBolt(builder,
+                propertyParser.getProperty(ConfigVars.MONGO_IP_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.MONGO_PORT_KEY)),
+                propertyParser.getProperty(ConfigVars.MONGO_DATABASE_NAME_KEY),
+                propertyParser.getProperty(ConfigVars.MONGO_COLLECTION_NAME_KEY),
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.MONGO_BOLT_PARALLELISM_KEY)),
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_BOLT_PARALLELISM_KEY)),
-                fileRotationPolicy,
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_BOLT_SYNC_COUNT_KEY)));
+                propertyParser.getProperty(ConfigVars.MONGO_BOLT_NAME_KEY));
+
 
         // Storm Topology Config
         Config stormConfig = StormConfig.createStormConfig(
