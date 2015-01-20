@@ -120,7 +120,7 @@ public class KafkaHiveHdfsTopologyTest {
 
         // Stop Storm
         try {
-            stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME));
+            stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME_KEY));
         } catch(IllegalStateException e) { }
 
         // Stop Kafka
