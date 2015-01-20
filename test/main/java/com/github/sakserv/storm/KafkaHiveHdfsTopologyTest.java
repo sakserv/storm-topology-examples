@@ -52,6 +52,7 @@ import java.sql.*;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class KafkaHiveHdfsTopologyTest {
     
@@ -244,7 +245,7 @@ public class KafkaHiveHdfsTopologyTest {
         LOG.info("HDFS: FILESTATUS: " + fileStatus.toString());
 
         hdfsFsHandle.close();
-
+        
         Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
         perms.add(PosixFilePermission.OWNER_READ);
         perms.add(PosixFilePermission.OWNER_WRITE);
@@ -284,7 +285,11 @@ public class KafkaHiveHdfsTopologyTest {
         hdfsFsHandle.close();
 
         // Validate the number of lines matches the number of kafka messages
-        assertEquals(Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)), count);
+        int msgCountLow = Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)) - 2;
+        int msgCountHigh = Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)) + 2;
+        
+        assertTrue(msgCountLow <= count);
+        assertTrue(msgCountHigh >= count);
     }
 
     public void runStormKafkaHiveHdfsTopology() throws IOException {
