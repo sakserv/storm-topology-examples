@@ -226,7 +226,11 @@ public class KafkaHiveHdfsTopologyTest {
             count++;
         }
         // Validate the number of rows matches the number of kafka messages
-        assertEquals(Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)), count);
+        int msgCountLow = Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)) - 2;
+        int msgCountHigh = Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)) + 2;
+
+        assertTrue(msgCountLow <= count);
+        assertTrue(msgCountHigh >= count);
     }
 
     public void createTmpHive() throws IOException {
@@ -285,11 +289,7 @@ public class KafkaHiveHdfsTopologyTest {
         hdfsFsHandle.close();
 
         // Validate the number of lines matches the number of kafka messages
-        int msgCountLow = Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)) - 2;
-        int msgCountHigh = Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)) + 2;
-        
-        assertTrue(msgCountLow <= count);
-        assertTrue(msgCountHigh >= count);
+        assertEquals(Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)), count);
     }
 
     public void runStormKafkaHiveHdfsTopology() throws IOException {
