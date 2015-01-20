@@ -238,8 +238,10 @@ public class KafkaHiveHdfsTopologyTest {
 
         hdfsFsHandle.delete(new Path(hdfsSessionPath), true);
 
-        FsPermission fsPerms = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
+        FsPermission fsPerms = new FsPermission("777");
         hdfsFsHandle.mkdirs(new Path(hdfsSessionPath), fsPerms);
+        hdfsFsHandle.setOwner(new Path(hdfsSessionPath), "hive", "hadoop");
+        hdfsFsHandle.setPermission(new Path(hdfsSessionPath), fsPerms);
 
         fileStatus = hdfsFsHandle.getFileStatus(new Path(hdfsSessionPath));
         LOG.info("HDFS: FILESTATUS: " + fileStatus.toString());
