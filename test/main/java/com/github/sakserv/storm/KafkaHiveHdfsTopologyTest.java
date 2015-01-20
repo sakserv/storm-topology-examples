@@ -24,10 +24,9 @@ import com.github.sakserv.minicluster.impl.*;
 import com.github.sakserv.minicluster.util.FileUtils;
 import com.github.sakserv.storm.config.StormConfig;
 import com.github.sakserv.storm.scheme.JsonScheme;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.*;
@@ -229,6 +228,25 @@ public class KafkaHiveHdfsTopologyTest {
         //assertEquals(Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_COUNT_KEY)), count);
     }
 
+    public void createTmpHiveHdfs() throws IOException {
+        String hdfsSessionPath = propertyParser.getProperty(ConfigVars.HIVE_TEST_HDFS_SESSION_PATH_KEY);
+        LOG.info("HDFS: Creating " + hdfsSessionPath);
+
+        // Get the filesystem handle and a list of files written by the test
+        FileStatus fileStatus;
+        FileSystem hdfsFsHandle = hdfsLocalCluster.getHdfsFileSystemHandle();
+
+        hdfsFsHandle.delete(new Path(hdfsSessionPath), true);
+
+        FsPermission fsPerms = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
+        hdfsFsHandle.mkdirs(new Path(hdfsSessionPath), fsPerms);
+
+        fileStatus = hdfsFsHandle.getFileStatus(new Path(hdfsSessionPath));
+        LOG.info("HDFS: FILESTATUS: " + fileStatus.toString());
+
+        hdfsFsHandle.close();
+    }
+
     public void validateHdfsResults() throws IOException {
         LOG.info("HDFS: VALIDATING");
         
@@ -313,6 +331,8 @@ public class KafkaHiveHdfsTopologyTest {
 
     @Test
     public void testKafkaHiveHdfsTopology() throws TException, JSONException, ClassNotFoundException, SQLException, IOException {
+        
+        createTmpHiveHdfs();
 
         // Run the Kafka Producer
         KafkaProducerTest.produceMessages(propertyParser.getProperty(ConfigVars.KAFKA_TEST_BROKER_LIST_KEY),

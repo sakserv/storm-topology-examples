@@ -46,7 +46,6 @@ public class ConfigVars {
     public static final String HIVE_SCRATCH_DIR_KEY = "hive.scratch.dir";
     public static final String HIVE_SERVER2_PORT_KEY = "hive.server2.port";
     
-    
     // Hive Bolt
     public static final String HIVE_BOLT_DATABASE_KEY = "hive.bolt.database";
     public static final String HIVE_BOLT_TABLE_KEY = "hive.bolt.table";
@@ -65,6 +64,7 @@ public class ConfigVars {
     
     // Hive Test - used for Unit Testing
     public static final String HIVE_TEST_TABLE_LOCATION_KEY = "hive.test.table.location";
+    public static final String HIVE_TEST_HDFS_SESSION_PATH_KEY = "hive.test.hdfs.session.path";
     
     // HDFS Bolt
     public static final String HDFS_BOLT_DFS_URI_KEY = "hdfs.bolt.dfs.uri";
