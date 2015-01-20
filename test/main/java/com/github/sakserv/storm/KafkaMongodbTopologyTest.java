@@ -177,7 +177,7 @@ public class KafkaMongodbTopologyTest {
         // Run the Kafka Mongo topology and sleep 5 sec to wait for completion
         runStormKafkaMongodbTopology();
         try {
-            Thread.sleep(5000L);
+            Thread.sleep(10000L);
         } catch (InterruptedException e) {
             System.exit(1);
         }
