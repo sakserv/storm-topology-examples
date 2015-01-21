@@ -17,8 +17,8 @@ package com.github.sakserv.storm;
 import backtype.storm.spout.Scheme;
 import backtype.storm.spout.SchemeAsMultiScheme;
 import backtype.storm.topology.TopologyBuilder;
-import com.github.sakserv.storm.scheme.JsonScheme;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import storm.kafka.KafkaSpout;
 import storm.kafka.SpoutConfig;
 import storm.kafka.ZkHosts;
@@ -27,7 +27,7 @@ import java.util.UUID;
 
 public class ConfigureKafkaSpout {
 
-    private static final Logger LOG = Logger.getLogger(ConfigureKafkaSpout.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigureKafkaSpout.class);
 
     public static void configureKafkaSpout(TopologyBuilder builder, String zkHostString, String kafkaTopic, 
                                            String kafkaStartOffset, int parallelismHint, String spoutName,
@@ -59,10 +59,8 @@ public class ConfigureKafkaSpout {
         // Allow for passing in an offset time
         // startOffsetTime has a bug that ignores the special -2 value
         if(kafkaStartOffset.equals("-2")) {
-            LOG.info("KAFKASPOUT: Starting from beginning");
             spoutConfig.forceFromStart = true;
         } else if (kafkaStartOffset != null) {
-            LOG.info("KAFKASPOUT: NOT Starting from beginning");
             spoutConfig.startOffsetTime = Long.parseLong(kafkaStartOffset);
         }
         

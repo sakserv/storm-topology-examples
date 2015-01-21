@@ -16,14 +16,15 @@ package com.github.sakserv.storm;
 
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
-import org.apache.log4j.Logger;
 import org.apache.storm.hive.bolt.HiveBolt;
 import org.apache.storm.hive.bolt.mapper.DelimitedRecordHiveMapper;
 import org.apache.storm.hive.common.HiveOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ConfigureHiveBolt {
 
-    private static final Logger LOG = Logger.getLogger(ConfigureHiveBolt.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigureHiveBolt.class);
 
     public static void configureHiveStreamingBolt(TopologyBuilder builder, 
                                                   String colNames, 

@@ -15,7 +15,6 @@
 package com.github.sakserv.storm;
 
 import backtype.storm.Config;
-import backtype.storm.generated.KillOptions;
 import backtype.storm.topology.TopologyBuilder;
 import com.github.sakserv.config.ConfigVars;
 import com.github.sakserv.config.PropertyParser;
@@ -23,23 +22,21 @@ import com.github.sakserv.kafka.KafkaProducerTest;
 import com.github.sakserv.minicluster.impl.*;
 import com.github.sakserv.minicluster.util.FileUtils;
 import com.github.sakserv.storm.config.StormConfig;
-import com.github.sakserv.storm.scheme.JsonScheme;
 import org.apache.hadoop.fs.*;
-import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.ql.io.orc.OrcSerde;
 import org.apache.hadoop.hive.serde.Constants;
-import org.apache.log4j.Logger;
 import org.apache.storm.hdfs.bolt.rotation.FileRotationPolicy;
 import org.apache.thrift.TException;
 import org.codehaus.jettison.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import scala.Int;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -57,8 +54,8 @@ import static org.junit.Assert.assertTrue;
 public class KafkaHiveHdfsTopologyTest {
     
     // Logger
-    private static final Logger LOG = Logger.getLogger(KafkaHiveHdfsTopologyTest.class);
-
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaHiveHdfsTopologyTest.class);
+    
     // Properties file for tests
     private PropertyParser propertyParser;
     private static final String PROP_FILE = "local.properties";

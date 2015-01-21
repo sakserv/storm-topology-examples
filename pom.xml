@@ -11,7 +11,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <hadoop-mini-clusters.version>0.0.9</hadoop-mini-clusters.version>
         <regex-tester.version>0.1</regex-tester.version>
-        <log4j.version>1.2.17</log4j.version>
+        <slf4j.version>1.7.10</slf4j.version>
         <junit.version>4.11</junit.version>
         <storm.version>0.9.3.2.2.0.0-2041</storm.version>
         <hive.version>0.14.0.2.2.0.0-2041</hive.version>
@@ -62,10 +62,14 @@
             <version>${hadoop-mini-clusters.version}</version>
         </dependency>
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>${log4j.version}</version>
-            <scope>provided</scope>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

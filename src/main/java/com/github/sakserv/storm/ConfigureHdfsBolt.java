@@ -26,14 +26,14 @@ import org.apache.storm.hdfs.bolt.rotation.FileSizeRotationPolicy;
 import org.apache.storm.hdfs.bolt.rotation.TimedRotationPolicy;
 import org.apache.storm.hdfs.bolt.sync.CountSyncPolicy;
 import org.apache.storm.hdfs.bolt.sync.SyncPolicy;
-
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class ConfigureHdfsBolt {
 
-    private static final Logger LOG = Logger.getLogger(ConfigureHdfsBolt.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigureHdfsBolt.class);
 
     public static void configureHdfsBolt(TopologyBuilder builder, 
                                          String delimiter, 

@@ -1,7 +1,6 @@
 package com.github.sakserv.storm;
 
 import backtype.storm.Config;
-import backtype.storm.spout.Scheme;
 import backtype.storm.topology.TopologyBuilder;
 import com.github.sakserv.config.ConfigVars;
 import com.github.sakserv.config.PropertyParser;
@@ -11,25 +10,24 @@ import com.github.sakserv.minicluster.impl.MongodbLocalServer;
 import com.github.sakserv.minicluster.impl.StormLocalCluster;
 import com.github.sakserv.minicluster.impl.ZookeeperLocalCluster;
 import com.github.sakserv.storm.config.StormConfig;
-import com.github.sakserv.storm.scheme.JsonScheme;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
-import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Map;
 
+import static com.thewonggei.regexTester.hamcrest.RegexMatches.doesMatchRegex;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-
-import static com.thewonggei.regexTester.hamcrest.RegexMatches.doesMatchRegex;
 
 /**
  * Created by skumpf on 1/8/15.
@@ -37,7 +35,7 @@ import static com.thewonggei.regexTester.hamcrest.RegexMatches.doesMatchRegex;
 public class KafkaMongodbTopologyTest {
 
     // Logger
-    private static final Logger LOG = Logger.getLogger(KafkaHiveHdfsTopologyTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaMongodbTopologyTest.class);
     
     // Properties file for tests
     private PropertyParser propertyParser;

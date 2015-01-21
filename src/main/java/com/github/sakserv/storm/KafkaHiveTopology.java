@@ -20,8 +20,6 @@ import backtype.storm.topology.TopologyBuilder;
 import com.github.sakserv.config.ConfigVars;
 import com.github.sakserv.config.PropertyParser;
 import com.github.sakserv.storm.config.StormConfig;
-import com.github.sakserv.storm.scheme.JsonScheme;
-import org.apache.hadoop.hdfs.DFSClient;
 
 
 public class KafkaHiveTopology {

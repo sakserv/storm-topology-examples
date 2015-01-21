@@ -15,11 +15,12 @@ package com.github.sakserv.storm;
 
 import backtype.storm.topology.TopologyBuilder;
 import com.github.sakserv.storm.bolt.SimpleMongoBolt;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ConfigureMongodbBolt {
-
-    private static final Logger LOG = Logger.getLogger(ConfigureMongodbBolt.class);
+    
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigureMongodbBolt.class);
 
     public static void configureMongodbBolt(TopologyBuilder builder, String mongodbHost, int mongodbPort, 
                                             String mongodbDB, String mongodbCollection, int parallelismHint,

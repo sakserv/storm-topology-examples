@@ -1,14 +1,13 @@
 package com.github.sakserv.kafka;
 
-import com.github.sakserv.config.ConfigVars;
-import com.github.sakserv.config.PropertyParser;
 import com.github.sakserv.datetime.GenerateRandomDay;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
-import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -18,7 +17,7 @@ import java.util.Properties;
  */
 public class KafkaProducerTest {
 
-    private static final Logger LOG = Logger.getLogger(KafkaProducerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaProducerTest.class);
 
     public static void produceMessages(String brokerList, String topic, int msgCount, String msgPayload) throws JSONException, IOException {
         
