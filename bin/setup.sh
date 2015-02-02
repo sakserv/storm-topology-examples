@@ -32,3 +32,5 @@ echo -e "\n#### Creating the Kafka Topic: test_topic"
 echo -e "\n#### Creating the Hive ORC table: default.test"
 cd /tmp/storm-topology-examples/
 hive -f bin/hive/create_orc_table.sql
+
+exit 0

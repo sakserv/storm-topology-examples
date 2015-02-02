@@ -18,11 +18,12 @@ public class ConfigVars {
     // Zookeeper
     public static final String ZOOKEEPER_TEMP_DIR_KEY = "zookeeper.temp.dir";
     public static final String ZOOKEEPER_PORT_KEY = "zookeeper.port";
-    public static final String ZOOKEEPER_HOSTS_KEY = "zookeeper.hosts";
+    public static final String ZOOKEEPER_HOSTNAME_KEY = "zookeeper.hostname";
     public static final String ZOOKEEPER_CONNECTION_STRING_KEY = "zookeeper.connection.string";
     
     // Kafka
     public static final String KAFKA_TOPIC_KEY = "kafka.topic";
+    public static final String KAFKA_HOSTNAME_KEY = "kafka.hostname";
     public static final String KAFKA_PORT_KEY = "kafka.port";
     
     // Kafka Spout
@@ -39,12 +40,14 @@ public class ConfigVars {
     public static final String KAFKA_TEST_MSG_PAYLOAD_KEY = "kafka.test.msg.payload";
     
     // Hive
-    public static final String HIVE_METASTORE_HOST_KEY = "hive.metastore.host";
+    public static final String HIVE_METASTORE_HOSTNAME_KEY = "hive.metastore.hostname";
     public static final String HIVE_METASTORE_PORT_KEY = "hive.metastore.port";
     public static final String HIVE_METASTORE_URI_KEY = "hive.metastore.uri";
-    public static final String HIVE_METASTORE_DERBY_DB_PATH_KEY = "hive.metastore.derby.db.path";
+    public static final String HIVE_METASTORE_DERBY_DB_DIR_KEY = "hive.metastore.derby.db.dir";
     public static final String HIVE_SCRATCH_DIR_KEY = "hive.scratch.dir";
+    public static final String HIVE_SERVER2_HOSTNAME_KEY = "hive.server2.hostname";
     public static final String HIVE_SERVER2_PORT_KEY = "hive.server2.port";
+    public static final String HIVE_WAREHOUSE_DIR_KEY = "hive.warehouse.dir";
     
     // Hive Bolt
     public static final String HIVE_BOLT_DATABASE_KEY = "hive.bolt.database";
@@ -65,6 +68,13 @@ public class ConfigVars {
     // Hive Test - used for Unit Testing
     public static final String HIVE_TEST_TABLE_LOCATION_KEY = "hive.test.table.location";
     public static final String HIVE_TEST_HDFS_SESSION_PATH_KEY = "hive.test.hdfs.session.path";
+
+    //HDFS
+    public static final String HDFS_NAMENODE_PORT_KEY = "hdfs.namenode.port";
+    public static final String HDFS_TEMP_DIR_KEY = "hdfs.temp.dir";
+    public static final String HDFS_NUM_DATANODES_KEY = "hdfs.num.datanodes";
+    public static final String HDFS_ENABLE_PERMISSIONS_KEY = "hdfs.enable.permissions";
+    public static final String HDFS_FORMAT_KEY = "hdfs.format";
     
     // HDFS Bolt
     public static final String HDFS_BOLT_DFS_URI_KEY = "hdfs.bolt.dfs.uri";
@@ -90,7 +100,7 @@ public class ConfigVars {
     public static final String HDFS_BOLT_USE_SIZE_BASED_FILEROTATIONPOLICY_SIZE_KEY =
             "hdfs.bolt.use.size.based.filerotationpolicy.size";
 
-
+    
     // MongoDB
     public static final String MONGO_IP_KEY = "mongo.ip";
     public static final String MONGO_PORT_KEY = "mongo.port";

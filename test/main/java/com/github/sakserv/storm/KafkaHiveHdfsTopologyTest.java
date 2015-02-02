@@ -21,7 +21,9 @@ import com.github.sakserv.config.PropertyParser;
 import com.github.sakserv.kafka.KafkaProducerTest;
 import com.github.sakserv.minicluster.impl.*;
 import com.github.sakserv.minicluster.util.FileUtils;
+import com.github.sakserv.storm.config.HiveConfig;
 import com.github.sakserv.storm.config.StormConfig;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
@@ -59,7 +61,7 @@ public class KafkaHiveHdfsTopologyTest {
     // Properties file for tests
     private PropertyParser propertyParser;
     private static final String PROP_FILE = "local.properties";
-
+    
     private ZookeeperLocalCluster zookeeperLocalCluster;
     private KafkaLocalBroker kafkaLocalBroker;
     private StormLocalCluster stormLocalCluster;
@@ -73,42 +75,70 @@ public class KafkaHiveHdfsTopologyTest {
         // Parse the properties file
         propertyParser = new PropertyParser();
         propertyParser.parsePropsFile(PROP_FILE);
-
+        
         // Start Zookeeper
-        zookeeperLocalCluster = new ZookeeperLocalCluster(
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)),
-                propertyParser.getProperty(ConfigVars.ZOOKEEPER_TEMP_DIR_KEY));
+        zookeeperLocalCluster = new ZookeeperLocalCluster.Builder()
+                .setPort(Integer.parseInt(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)))
+                .setTempDir(propertyParser.getProperty(ConfigVars.ZOOKEEPER_TEMP_DIR_KEY))
+                .setZookeeperConnectionString(propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY))
+                .build();
         zookeeperLocalCluster.start();
 
         // Start HDFS
-        hdfsLocalCluster = new HdfsLocalCluster();
+        hdfsLocalCluster = new HdfsLocalCluster.Builder()
+                .setHdfsNamenodePort(Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_NAMENODE_PORT_KEY)))
+                .setHdfsTempDir(propertyParser.getProperty(ConfigVars.HDFS_TEMP_DIR_KEY))
+                .setHdfsNumDatanodes(Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_NUM_DATANODES_KEY)))
+                .setHdfsEnablePermissions(
+                        Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.HDFS_ENABLE_PERMISSIONS_KEY)))
+                .setHdfsFormat(Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.HDFS_FORMAT_KEY)))
+                .setHdfsConfig(new Configuration())
+                .build();
         hdfsLocalCluster.start();
 
-        // Start HiveMetaStore
-        hiveLocalMetaStore = new HiveLocalMetaStore(
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_METASTORE_PORT_KEY)),
-                propertyParser.getProperty((ConfigVars.HIVE_METASTORE_DERBY_DB_PATH_KEY)));
-        hiveLocalMetaStore.start();
+/*        // Start HiveMetaStore
+        hiveLocalMetaStore = new HiveLocalMetaStore.Builder()
+                .setHiveMetastoreHostname(propertyParser.getProperty(ConfigVars.HIVE_METASTORE_HOSTNAME_KEY))
+                .setHiveMetastorePort(Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_METASTORE_PORT_KEY)))
+                .setHiveMetastoreDerbyDbDir(propertyParser.getProperty(ConfigVars.HIVE_METASTORE_DERBY_DB_DIR_KEY))
+                .setHiveScratchDir(propertyParser.getProperty(ConfigVars.HIVE_SCRATCH_DIR_KEY))
+                .setHiveWarehouseDir(propertyParser.getProperty(ConfigVars.HIVE_WAREHOUSE_DIR_KEY))
+                .setHiveConf(HiveConfig.buildHiveConf())
+                .build();
+        hiveLocalMetaStore.start();*/
         
         
-        hiveLocalServer2 = new HiveLocalServer2(hiveLocalMetaStore.getMetaStoreUri(),
-                propertyParser.getProperty(ConfigVars.HIVE_METASTORE_DERBY_DB_PATH_KEY),
-                propertyParser.getProperty(ConfigVars.HIVE_SCRATCH_DIR_KEY),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_SERVER2_PORT_KEY)),
-                zookeeperLocalCluster.getZkConnectionString());
-        hiveLocalServer2.start();
+/*        hiveLocalServer2 = new HiveLocalServer2.Builder()
+                .setHiveServer2Hostname(propertyParser.getProperty(ConfigVars.HIVE_SERVER2_HOSTNAME_KEY))
+                .setHiveServer2Port(Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_SERVER2_PORT_KEY)))
+                .setHiveMetastoreHostname(propertyParser.getProperty(ConfigVars.HIVE_METASTORE_HOSTNAME_KEY))
+                .setHiveMetastorePort(Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_METASTORE_PORT_KEY)))
+                .setHiveMetastoreDerbyDbDir(propertyParser.getProperty(ConfigVars.HIVE_METASTORE_DERBY_DB_DIR_KEY))
+                .setHiveScratchDir(propertyParser.getProperty(ConfigVars.HIVE_SCRATCH_DIR_KEY))
+                .setHiveWarehouseDir(propertyParser.getProperty(ConfigVars.HIVE_WAREHOUSE_DIR_KEY))
+                .setHiveConf(HiveConfig.buildHiveConf())
+                .setZookeeperConnectionString(propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY))
+                .build();
+        hiveLocalServer2.start();*/
         
         // Start Kafka
-        kafkaLocalBroker = new KafkaLocalBroker(propertyParser.getProperty(ConfigVars.KAFKA_TOPIC_KEY),
-                propertyParser.getProperty(ConfigVars.KAFKA_TEST_TEMP_DIR_KEY),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_PORT_KEY)),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_BROKER_ID_KEY)),
-                propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY));
+        kafkaLocalBroker = new KafkaLocalBroker.Builder()
+                .setKafkaHostname(propertyParser.getProperty(ConfigVars.KAFKA_HOSTNAME_KEY))
+                .setKafkaPort(Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_PORT_KEY)))
+                .setKafkaBrokerId(Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_BROKER_ID_KEY)))
+                .setKafkaProperties(new Properties())
+                .setKafkaTempDir(propertyParser.getProperty(ConfigVars.KAFKA_TEST_TEMP_DIR_KEY))
+                .setZookeeperConnectionString(propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY))
+                .build();
         kafkaLocalBroker.start();
 
         // Start Storm
-        stormLocalCluster = new StormLocalCluster(propertyParser.getProperty(ConfigVars.ZOOKEEPER_HOSTS_KEY),
-                Long.parseLong(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)));
+        stormLocalCluster = new StormLocalCluster.Builder()
+                .setZookeeperHost(propertyParser.getProperty(ConfigVars.ZOOKEEPER_HOSTNAME_KEY))
+                .setZookeeperPort(Long.parseLong(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)))
+                .setEnableDebug(Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG_KEY)))
+                .setNumWorkers(Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS_KEY)))
+                .build();
         stormLocalCluster.start();
     }
 
@@ -123,13 +153,13 @@ public class KafkaHiveHdfsTopologyTest {
         // Stop Kafka
         kafkaLocalBroker.stop(true);
 
-        // Stop HiveMetaStore
+/*        // Stop HiveMetaStore
         hiveLocalMetaStore.stop();
 
         // Stop HiveServer2
         hiveLocalServer2.stop(true);
         FileUtils.deleteFolder(new File(propertyParser.getProperty(
-                ConfigVars.HIVE_TEST_TABLE_LOCATION_KEY)).getAbsolutePath());
+                ConfigVars.HIVE_TEST_TABLE_LOCATION_KEY)).getAbsolutePath());*/
 
         // Stop HDFS
         hdfsLocalCluster.stop(true);
@@ -139,7 +169,7 @@ public class KafkaHiveHdfsTopologyTest {
     }
 
     public void createTable() throws TException {
-        HiveMetaStoreClient hiveClient = new HiveMetaStoreClient(hiveLocalMetaStore.getConf());
+        HiveMetaStoreClient hiveClient = new HiveMetaStoreClient(hiveLocalMetaStore.getHiveConf());
 
         LOG.info("HIVE: Dropping hive table: " + propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY));
         hiveClient.dropTable(propertyParser.getProperty(ConfigVars.HIVE_BOLT_DATABASE_KEY),
@@ -204,7 +234,8 @@ public class KafkaHiveHdfsTopologyTest {
         LOG.info("HIVE: Loading the Hive JDBC Driver");
         Class.forName("org.apache.hive.jdbc.HiveDriver");
 
-        Connection con = DriverManager.getConnection("jdbc:hive2://localhost:" + hiveLocalServer2.getHiveServerThriftPort() + "/" + 
+        Connection con = DriverManager.getConnection("jdbc:hive2://" + 
+                hiveLocalServer2.getHiveServer2Hostname() + ":" + hiveLocalServer2.getHiveServer2Port() + "/" +
                 propertyParser.getProperty(ConfigVars.HIVE_BOLT_DATABASE_KEY), "user", "pass");
 
         String selectStmt = "SELECT * FROM " + propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY);
@@ -247,7 +278,7 @@ public class KafkaHiveHdfsTopologyTest {
 
         hdfsFsHandle.close();
         
-        Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+/*        Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
         perms.add(PosixFilePermission.OWNER_READ);
         perms.add(PosixFilePermission.OWNER_WRITE);
         perms.add(PosixFilePermission.OWNER_EXECUTE);
@@ -257,7 +288,7 @@ public class KafkaHiveHdfsTopologyTest {
         perms.add(PosixFilePermission.OTHERS_READ);
         perms.add(PosixFilePermission.OTHERS_WRITE);
         perms.add(PosixFilePermission.OTHERS_EXECUTE);
-        Files.setPosixFilePermissions(Paths.get(sessionPath), perms);
+        Files.setPosixFilePermissions(Paths.get(sessionPath), perms);*/
     }
 
     public void validateHdfsResults() throws IOException {
@@ -307,19 +338,19 @@ public class KafkaHiveHdfsTopologyTest {
         ConfigureHdfsBolt.configureHdfsBolt(builder,
                 propertyParser.getProperty(ConfigVars.HDFS_BOLT_FIELD_DELIMITER_KEY),
                 propertyParser.getProperty(ConfigVars.HDFS_BOLT_OUTPUT_LOCATION_KEY),
-                hdfsLocalCluster.getHdfsUriString(),
+                propertyParser.getProperty(ConfigVars.HDFS_BOLT_DFS_URI_KEY),
                 propertyParser.getProperty(ConfigVars.HDFS_BOLT_NAME_KEY),
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_BOLT_PARALLELISM_KEY)),
                 fileRotationPolicy,
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_BOLT_SYNC_COUNT_KEY)));
 
-        // Configure the HiveBolt
+/*        // Configure the HiveBolt
         ConfigureHiveBolt.configureHiveStreamingBolt(builder,
                 propertyParser.getProperty(ConfigVars.HIVE_BOLT_COLUMN_LIST_KEY),
                 propertyParser.getProperty(ConfigVars.HIVE_BOLT_PARTITION_LIST_KEY),
                 propertyParser.getProperty(ConfigVars.HIVE_BOLT_COLUMN_PARTITION_LIST_DELIMITER_KEY),
-                hiveLocalMetaStore.getMetaStoreUri(),
+                propertyParser.getProperty(ConfigVars.HIVE_METASTORE_URI_KEY),
                 propertyParser.getProperty(ConfigVars.HIVE_BOLT_DATABASE_KEY),
                 propertyParser.getProperty(ConfigVars.HIVE_BOLT_TABLE_KEY),
                 propertyParser.getProperty(ConfigVars.HIVE_BOLT_NAME_KEY),
@@ -330,7 +361,7 @@ public class KafkaHiveHdfsTopologyTest {
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_MAX_OPEN_CONNECTIONS_KEY)),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_BATCH_SIZE_KEY)),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_IDLE_TIMEOUT_KEY)),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_HEARTBEAT_INTERVAL_KEY)));
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_HEARTBEAT_INTERVAL_KEY)));*/
 
 
         // Storm Topology Config
@@ -355,7 +386,7 @@ public class KafkaHiveHdfsTopologyTest {
                 propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_PAYLOAD_KEY));
         
         // Create the Hive table
-        createTable();
+        //createTable();
         
         // Run the Kafka Hive/HDFS topology and sleep 10 seconds to wait for completion
         runStormKafkaHiveHdfsTopology();
@@ -366,8 +397,7 @@ public class KafkaHiveHdfsTopologyTest {
         }
 
         // To ensure transactions and files are closed, stop storm
-        stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME_KEY),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_KILL_TOPOLOGY_WAIT_SECS_KEY)));
+        stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME_KEY));
         try {
             Thread.sleep(10000L);
         } catch (InterruptedException e) {
@@ -375,7 +405,7 @@ public class KafkaHiveHdfsTopologyTest {
         }
 
         // Validate Hive table is populated
-        validateHiveResults();
+        //validateHiveResults();
         try {
             Thread.sleep(10000L);
         } catch (InterruptedException e) {

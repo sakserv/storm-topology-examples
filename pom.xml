@@ -9,7 +9,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <hadoop-mini-clusters.version>0.0.9</hadoop-mini-clusters.version>
+        <hadoop-mini-clusters.version>0.0.11</hadoop-mini-clusters.version>
         <regex-tester.version>0.1</regex-tester.version>
         <slf4j.version>1.7.10</slf4j.version>
         <junit.version>4.11</junit.version>
@@ -29,7 +29,7 @@
                 <enabled>true</enabled>
             </releases>
             <snapshots>
-                <enabled>true</enabled>
+                <enabled>false</enabled>
             </snapshots>
             <id>clojars.org</id>
             <url>http://clojars.org/repo</url>
@@ -39,7 +39,7 @@
                 <enabled>true</enabled>
             </releases>
             <snapshots>
-                <enabled>true</enabled>
+                <enabled>false</enabled>
             </snapshots>
             <id>central</id>
             <url>http://repo1.maven.org/maven2/</url>
@@ -52,15 +52,15 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.thewonggei</groupId>
-            <artifactId>regex-tester</artifactId>
-            <version>${regex-tester.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.github.sakserv</groupId>
             <artifactId>hadoop-mini-clusters</artifactId>
             <version>${hadoop-mini-clusters.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.thewonggei</groupId>
+            <artifactId>regex-tester</artifactId>
+            <version>${regex-tester.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -436,7 +436,6 @@
                                         implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass></mainClass>
                                 </transformer>
                             </transformers>
 

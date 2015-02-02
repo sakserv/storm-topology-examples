@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.Properties;
 
 import static com.thewonggei.regexTester.hamcrest.RegexMatches.doesMatchRegex;
 import static org.junit.Assert.assertEquals;
@@ -53,27 +54,38 @@ public class KafkaMongodbTopologyTest {
         propertyParser.parsePropsFile(PROP_FILE);
         
         // Start Zookeeper
-        zookeeperLocalCluster = new ZookeeperLocalCluster(
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)), 
-                propertyParser.getProperty(ConfigVars.ZOOKEEPER_TEMP_DIR_KEY));
+        zookeeperLocalCluster = new ZookeeperLocalCluster.Builder()
+                .setPort(Integer.parseInt(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)))
+                .setTempDir(propertyParser.getProperty(ConfigVars.ZOOKEEPER_TEMP_DIR_KEY))
+                .setZookeeperConnectionString(propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY))
+                .build();
         zookeeperLocalCluster.start();
 
         // Start Kafka
-        kafkaLocalBroker = new KafkaLocalBroker(propertyParser.getProperty(ConfigVars.KAFKA_TOPIC_KEY),
-                propertyParser.getProperty(ConfigVars.KAFKA_TEST_TEMP_DIR_KEY),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_PORT_KEY)),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_BROKER_ID_KEY)),
-                propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY));
+        kafkaLocalBroker = new KafkaLocalBroker.Builder()
+                .setKafkaHostname(propertyParser.getProperty(ConfigVars.KAFKA_HOSTNAME_KEY))
+                .setKafkaPort(Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_PORT_KEY)))
+                .setKafkaBrokerId(Integer.parseInt(propertyParser.getProperty(ConfigVars.KAFKA_TEST_BROKER_ID_KEY)))
+                .setKafkaProperties(new Properties())
+                .setKafkaTempDir(propertyParser.getProperty(ConfigVars.KAFKA_TEST_TEMP_DIR_KEY))
+                .setZookeeperConnectionString(propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY))
+                .build();
         kafkaLocalBroker.start();
         
         // Start MongoDB
-        mongodbLocalServer = new MongodbLocalServer(propertyParser.getProperty(ConfigVars.MONGO_IP_KEY),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.MONGO_PORT_KEY)));
+        mongodbLocalServer = new MongodbLocalServer.Builder()
+                .setIp(propertyParser.getProperty(ConfigVars.MONGO_IP_KEY))
+                .setPort(Integer.parseInt(propertyParser.getProperty(ConfigVars.MONGO_PORT_KEY)))
+                .build();
         mongodbLocalServer.start();
 
         // Start Storm
-        stormLocalCluster = new StormLocalCluster(propertyParser.getProperty(ConfigVars.ZOOKEEPER_HOSTS_KEY),
-                Long.parseLong(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)));
+        stormLocalCluster = new StormLocalCluster.Builder()
+                .setZookeeperHost(propertyParser.getProperty(ConfigVars.ZOOKEEPER_HOSTNAME_KEY))
+                .setZookeeperPort(Long.parseLong(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)))
+                .setEnableDebug(Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG_KEY)))
+                .setNumWorkers(Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS_KEY)))
+                .build();
         stormLocalCluster.start();
     }
     
