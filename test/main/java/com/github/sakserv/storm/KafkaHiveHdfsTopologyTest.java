@@ -96,7 +96,7 @@ public class KafkaHiveHdfsTopologyTest {
                 .build();
         hdfsLocalCluster.start();
 
-/*        // Start HiveMetaStore
+        // Start HiveMetaStore
         hiveLocalMetaStore = new HiveLocalMetaStore.Builder()
                 .setHiveMetastoreHostname(propertyParser.getProperty(ConfigVars.HIVE_METASTORE_HOSTNAME_KEY))
                 .setHiveMetastorePort(Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_METASTORE_PORT_KEY)))
@@ -105,10 +105,10 @@ public class KafkaHiveHdfsTopologyTest {
                 .setHiveWarehouseDir(propertyParser.getProperty(ConfigVars.HIVE_WAREHOUSE_DIR_KEY))
                 .setHiveConf(HiveConfig.buildHiveConf())
                 .build();
-        hiveLocalMetaStore.start();*/
+        hiveLocalMetaStore.start();
         
         
-/*        hiveLocalServer2 = new HiveLocalServer2.Builder()
+        hiveLocalServer2 = new HiveLocalServer2.Builder()
                 .setHiveServer2Hostname(propertyParser.getProperty(ConfigVars.HIVE_SERVER2_HOSTNAME_KEY))
                 .setHiveServer2Port(Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_SERVER2_PORT_KEY)))
                 .setHiveMetastoreHostname(propertyParser.getProperty(ConfigVars.HIVE_METASTORE_HOSTNAME_KEY))
@@ -119,7 +119,7 @@ public class KafkaHiveHdfsTopologyTest {
                 .setHiveConf(HiveConfig.buildHiveConf())
                 .setZookeeperConnectionString(propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY))
                 .build();
-        hiveLocalServer2.start();*/
+        hiveLocalServer2.start();
         
         // Start Kafka
         kafkaLocalBroker = new KafkaLocalBroker.Builder()
@@ -153,13 +153,13 @@ public class KafkaHiveHdfsTopologyTest {
         // Stop Kafka
         kafkaLocalBroker.stop(true);
 
-/*        // Stop HiveMetaStore
+        // Stop HiveMetaStore
         hiveLocalMetaStore.stop();
 
         // Stop HiveServer2
         hiveLocalServer2.stop(true);
         FileUtils.deleteFolder(new File(propertyParser.getProperty(
-                ConfigVars.HIVE_TEST_TABLE_LOCATION_KEY)).getAbsolutePath());*/
+                ConfigVars.HIVE_TEST_TABLE_LOCATION_KEY)).getAbsolutePath());
 
         // Stop HDFS
         hdfsLocalCluster.stop(true);
@@ -345,7 +345,7 @@ public class KafkaHiveHdfsTopologyTest {
                 fileRotationPolicy,
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HDFS_BOLT_SYNC_COUNT_KEY)));
 
-/*        // Configure the HiveBolt
+        // Configure the HiveBolt
         ConfigureHiveBolt.configureHiveStreamingBolt(builder,
                 propertyParser.getProperty(ConfigVars.HIVE_BOLT_COLUMN_LIST_KEY),
                 propertyParser.getProperty(ConfigVars.HIVE_BOLT_PARTITION_LIST_KEY),
@@ -361,7 +361,7 @@ public class KafkaHiveHdfsTopologyTest {
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_MAX_OPEN_CONNECTIONS_KEY)),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_BATCH_SIZE_KEY)),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_IDLE_TIMEOUT_KEY)),
-                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_HEARTBEAT_INTERVAL_KEY)));*/
+                Integer.parseInt(propertyParser.getProperty(ConfigVars.HIVE_BOLT_HEARTBEAT_INTERVAL_KEY)));
 
 
         // Storm Topology Config
@@ -386,7 +386,7 @@ public class KafkaHiveHdfsTopologyTest {
                 propertyParser.getProperty(ConfigVars.KAFKA_TEST_MSG_PAYLOAD_KEY));
         
         // Create the Hive table
-        //createTable();
+        createTable();
         
         // Run the Kafka Hive/HDFS topology and sleep 10 seconds to wait for completion
         runStormKafkaHiveHdfsTopology();
@@ -405,7 +405,7 @@ public class KafkaHiveHdfsTopologyTest {
         }
 
         // Validate Hive table is populated
-        //validateHiveResults();
+        validateHiveResults();
         try {
             Thread.sleep(10000L);
         } catch (InterruptedException e) {
