@@ -13,12 +13,4 @@ Includes:
 
 Dependencies:
 -------------
-The examples depend on the hadoop-mini-clusters project, which is already added to the pom.
-
-```XML
-	<dependency>
-		<groupId>com.github.sakserv</groupId>
-		<artifactId>hadoop-mini-clusters</artifactId>
-		<version>0.0.9</version>
-	</dependency>
-```
+The examples depend on the [hadoop-mini-clusters](https://github.com/sakserv/hadoop-mini-clusters) project, which is already added to the pom.
