@@ -17,6 +17,7 @@ import backtype.storm.spout.Scheme;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class AvroScheme implements Scheme {
@@ -25,7 +26,7 @@ public class AvroScheme implements Scheme {
 
         @Override
         public List<Object> deserialize(byte[] bytes) {
-            String msg = bytes.toString();
+            String msg = Arrays.toString(bytes);
             return new Values(msg);
         }
 
