@@ -26,7 +26,7 @@ public class AvroScheme implements Scheme {
 
         @Override
         public List<Object> deserialize(byte[] bytes) {
-            String msg = Arrays.toString(bytes);
+            String msg = new String(bytes);
             return new Values(msg);
         }
 
