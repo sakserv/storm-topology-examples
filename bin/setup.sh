@@ -15,7 +15,7 @@ mvn --version
 echo -e "\n#### Building storm-topology-examples"
 cd /tmp
 git clone https://github.com/sakserv/storm-topology-examples.git
-cd /tmp/storm-topology-examples/ && mvn clean package install
+cd /tmp/storm-topology-examples/ && mvn -DskipTests=true clean package install
 
 # Install MongoDB
 #echo -e "\n#### Installing and starting mongodb"
