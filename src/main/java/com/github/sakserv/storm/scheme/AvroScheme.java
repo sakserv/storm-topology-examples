@@ -30,14 +30,14 @@ public class AvroScheme implements Scheme {
             String mutationTypeIdx = Byte.toString(bytes[1]);
             String mutationType = "";
             switch (mutationTypeIdx) {
-                case "1":   mutationType = "insert";
-                case "2":   mutationType = "update";
-                case "3":   mutationType = "delete";
+                case "1":   mutationType = "insert"; break;
+                case "2":   mutationType = "update"; break;
+                case "3":   mutationType = "delete"; break;
             }
-            String msg = "";
-            for (Byte theByte : bytes) {
-                msg = msg + Byte.toString(theByte);
-            }
+            
+            
+            byte[] newByteArray = Arrays.copyOfRange(bytes, 2, bytes.length - 1);
+            String msg = new String(newByteArray);
             
             return new Values(protocolVersion, mutationType, msg);
         }
