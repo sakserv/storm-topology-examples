@@ -26,12 +26,24 @@ public class AvroScheme implements Scheme {
 
         @Override
         public List<Object> deserialize(byte[] bytes) {
-            String msg = Arrays.toString(bytes);
-            return new Values(msg);
+            String protocolVersion = Byte.toString(bytes[0]);
+            String mutationTypeIdx = Byte.toString(bytes[1]);
+            String mutationType = "";
+            switch (mutationTypeIdx) {
+                case "1":   mutationType = "insert";
+                case "2":   mutationType = "update";
+                case "3":   mutationType = "delete";
+            }
+            String msg = "";
+            for (Byte theByte : bytes) {
+                msg = msg + Byte.toString(theByte);
+            }
+            
+            return new Values(protocolVersion, mutationType, msg);
         }
 
         @Override
             public Fields getOutputFields() {
-            return new Fields("msg");
+            return new Fields("version", "type", "msg");
         }
 }
