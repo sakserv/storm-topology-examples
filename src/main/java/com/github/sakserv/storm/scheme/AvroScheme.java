@@ -40,7 +40,7 @@ public class AvroScheme implements Scheme {
             
             byte[] newByteArray = Arrays.copyOfRange(bytes, 2, bytes.length - 1);
 
-            ByteBuffer bb = ByteBuffer.allocate(2);
+/*            ByteBuffer bb = ByteBuffer.allocate(2);
             bb.order(ByteOrder.LITTLE_ENDIAN);
             bb.put(newByteArray[0]);
             bb.put(newByteArray[1]);
@@ -48,12 +48,15 @@ public class AvroScheme implements Scheme {
 
             byte[] payloadByteArray = Arrays.copyOfRange(newByteArray, 2, newByteArray.length - 1);
             String theRest = Arrays.toString(payloadByteArray);
+                      
+            return new Values(protocolVersion, mutationType, schemaId, theRest);*/
             
-            return new Values(protocolVersion, mutationType, schemaId, theRest);
+            String theRest = Arrays.toString(newByteArray);
+            return new Values(protocolVersion, mutationType,theRest);
         }
 
         @Override
             public Fields getOutputFields() {
-            return new Fields("version", "type", "schemaId", "theRest");
+            return new Fields("version", "type", "theRest");
         }
 }
