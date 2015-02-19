@@ -16,7 +16,11 @@ package com.github.sakserv.storm.scheme;
 import backtype.storm.spout.Scheme;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
+import com.github.sakserv.avro.AvroSchemaUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
@@ -24,7 +28,9 @@ import java.util.List;
 
 public class AvroScheme implements Scheme {
 
-        private static final long serialVersionUID = -2990121166902741545L;
+    private static final Logger LOG = LoggerFactory.getLogger(AvroScheme.class);
+
+    private static final long serialVersionUID = -2990121166902741545L;
 
         @Override
         public List<Object> deserialize(byte[] bytes) {
@@ -40,19 +46,24 @@ public class AvroScheme implements Scheme {
             
             byte[] newByteArray = Arrays.copyOfRange(bytes, 2, bytes.length - 1);
 
+            // TODO: Find out if all schemaIds are a short 
 /*            ByteBuffer bb = ByteBuffer.allocate(2);
             bb.order(ByteOrder.LITTLE_ENDIAN);
             bb.put(newByteArray[0]);
             bb.put(newByteArray[1]);
-            short schemaId = bb.getShort(0);
+            short schemaId = bb.getShort(0);*/
 
             byte[] payloadByteArray = Arrays.copyOfRange(newByteArray, 2, newByteArray.length - 1);
             String theRest = Arrays.toString(payloadByteArray);
+
+            String deserializedValue = "";
+            try {
+                deserializedValue = AvroSchemaUtils.deserializeInsertMutation(payloadByteArray);
+            } catch (IOException e) {
+                LOG.info("ERROR: Failed to deserialize avro byte array for InsertMutation");
+            }
                       
-            return new Values(protocolVersion, mutationType, schemaId, theRest);*/
-            
-            String theRest = Arrays.toString(newByteArray);
-            return new Values(protocolVersion, mutationType,theRest);
+            return new Values(protocolVersion, mutationType, deserializedValue);
         }
 
         @Override
