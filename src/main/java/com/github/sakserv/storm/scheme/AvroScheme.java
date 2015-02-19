@@ -37,13 +37,13 @@ public class AvroScheme implements Scheme {
             
             
             byte[] newByteArray = Arrays.copyOfRange(bytes, 2, bytes.length - 1);
-            String msg = new String(newByteArray);
+            String theRest = Arrays.toString(newByteArray);
             
-            return new Values(protocolVersion, mutationType, msg);
+            return new Values(protocolVersion, mutationType, theRest);
         }
 
         @Override
             public Fields getOutputFields() {
-            return new Fields("version", "type", "msg");
+            return new Fields("version", "type", "theRest");
         }
 }
