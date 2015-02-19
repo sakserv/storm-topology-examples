@@ -54,7 +54,7 @@ public class AvroScheme implements Scheme {
             short schemaId = bb.getShort(0);*/
 
             byte[] payloadByteArray = Arrays.copyOfRange(newByteArray, 2, newByteArray.length - 1);
-            String theRest = Arrays.toString(payloadByteArray);
+            //String theRest = Arrays.toString(payloadByteArray);
 
             String deserializedValue = "";
             try {
@@ -68,6 +68,6 @@ public class AvroScheme implements Scheme {
 
         @Override
             public Fields getOutputFields() {
-            return new Fields("version", "type", "theRest");
+            return new Fields("version", "type", "deserializedValue");
         }
 }
