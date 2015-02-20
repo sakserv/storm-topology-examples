@@ -3,7 +3,7 @@
 # Install Maven
 echo -e "\n#### Installing Maven"
 cd /tmp
-wget http://www.gtlib.gatech.edu/pub/apache/maven/maven-3/3.2.5/binaries/apache-maven-3.2.5-bin.tar.gz
+wget -N http://www.gtlib.gatech.edu/pub/apache/maven/maven-3/3.2.5/binaries/apache-maven-3.2.5-bin.tar.gz
 tar -xzvf apache-maven-3.2.5-bin.tar.gz
 export M2_HOME=/tmp/apache-maven-3.2.5/
 export M2=$M2_HOME/bin
