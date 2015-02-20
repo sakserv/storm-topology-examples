@@ -38,6 +38,11 @@ cd /tmp/storm-topology-examples.git && bash -x bin/install_mongo.sh
 cd /tmp/storm-topology-examples.git && bash -x bin/create_orc_table.sh [/path/to/create_orc_table.sql]
 ```
 
+* Create the Kafka topic (if auto creation of topics is disabled)
+```
+cd /tmp/mypipe-example && bash -x bin/create_kafka_topic.sh <topic_name>
+```
+
 * Copy the properties template and edit with the appropriate properties
 ```
 cd /tmp/storm-topology-examples 
