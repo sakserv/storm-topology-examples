@@ -50,21 +50,21 @@ cp src/main/resources/sandbox_kafka_mongo.properties /tmp/foo.properties
 vi /tmp/foo.properties
 ```
 
-* Run the topology:
-
-** KafkaHdfsTopology
+Running Topologies
+------------------
+* KafkaHdfsTopology
 ```
 cd /tmp/storm-topology-examples/target
 storm jar storm-topology-examples-*.jar com.github.sakserv.storm.KafkaHdfsTopology /tmp/foo.properties
 ```
 
-** KafkaHiveTopology
+* KafkaHiveTopology
 ```
 cd /tmp/storm-topology-examples/target
 storm jar storm-topology-examples-*.jar com.github.sakserv.storm.KafkaHiveTopology /tmp/foo.properties
 ```
 
-** KafkaMongoTopology
+* KafkaMongoTopology
 ```
 cd /tmp/storm-topology-examples/target
 storm jar storm-topology-examples-*.jar com.github.sakserv.storm.KafkaMongoTopology /tmp/foo.properties
