@@ -21,19 +21,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.List;
 
 public class AvroScheme implements Scheme {
 
+    //
     private static final Logger LOG = LoggerFactory.getLogger(AvroScheme.class);
 
     private static final long serialVersionUID = -2990121166902741545L;
+    
+        // 1 byte - magic for version
+        // 1 byte - mutation id
+        // n bytes - schemaid (this appears to always be a short with a val of 0)
+        // n bytes - payload
 
         @Override
         public List<Object> deserialize(byte[] bytes) {
+            
+            // magic version byte and mutation type id
             String protocolVersion = Byte.toString(bytes[0]);
             String mutationTypeIdx = Byte.toString(bytes[1]);
             String mutationType = "";
@@ -43,24 +49,26 @@ public class AvroScheme implements Scheme {
                 case "3":   mutationType = "delete"; break;
             }
             
-            
-            byte[] newByteArray = Arrays.copyOfRange(bytes, 2, bytes.length - 1);
+            // Remove first two bytes
+            byte[] schemaIdByteArray = Arrays.copyOfRange(bytes, 2, 4);
 
-            // TODO: Find out if all schemaIds are a short 
+            // TODO: Find out if all schemaIds are a short with val 0
 /*            ByteBuffer bb = ByteBuffer.allocate(2);
             bb.order(ByteOrder.LITTLE_ENDIAN);
             bb.put(newByteArray[0]);
             bb.put(newByteArray[1]);
             short schemaId = bb.getShort(0);*/
 
-            byte[] payloadByteArray = Arrays.copyOfRange(newByteArray, 2, newByteArray.length - 1);
-            //String theRest = Arrays.toString(payloadByteArray);
-
+            // Get the payload bytes
+            byte[] payloadByteArray = Arrays.copyOfRange(bytes, 4, bytes.length - 1);
+            
+            // deserialize the payload using the appropriate avro schema
             String deserializedValue = "";
             try {
                 deserializedValue = AvroSchemaUtils.deserializeInsertMutation(payloadByteArray);
             } catch (IOException e) {
                 LOG.info("ERROR: Failed to deserialize avro byte array for InsertMutation");
+                deserializedValue = "exception";
             }
                       
             return new Values(protocolVersion, mutationType, deserializedValue);
