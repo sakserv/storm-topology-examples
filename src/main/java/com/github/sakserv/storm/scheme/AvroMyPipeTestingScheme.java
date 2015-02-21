@@ -33,7 +33,7 @@ public class AvroMyPipeTestingScheme implements Scheme {
 
     private static final long serialVersionUID = -2990121166902741545L;
     
-    private static List<String> fieldsList = new ArrayList<String>();
+    private List<String> fieldsList = new ArrayList<String>();
     
         // 1 byte - magic for version
         // 1 byte - mutation id
