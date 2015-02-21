@@ -62,14 +62,15 @@ public class AvroScheme implements Scheme {
             // Get the payload bytes
             byte[] payloadByteArray = Arrays.copyOfRange(bytes, 4, bytes.length - 1);
             
-            // deserialize the payload using the appropriate avro schema
+/*            // deserialize the payload using the appropriate avro schema
             String deserializedValue = "";
             try {
                 deserializedValue = AvroSchemaUtils.deserializeInsertMutation(payloadByteArray);
             } catch (IOException e) {
                 LOG.info("ERROR: Failed to deserialize avro byte array for InsertMutation");
-                deserializedValue = "exception";
-            }
+                deserializedValue = e.getMessage();
+            }*/
+            String deserializedValue = Arrays.toString(payloadByteArray);
                       
             return new Values(protocolVersion, mutationType, deserializedValue);
         }
