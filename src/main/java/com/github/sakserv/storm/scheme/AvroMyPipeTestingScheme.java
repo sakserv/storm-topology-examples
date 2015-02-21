@@ -80,7 +80,7 @@ public class AvroMyPipeTestingScheme implements Scheme {
                     e.printStackTrace();
                 }
 
-            } /*else if(mutationType.equals("DeleteMutation")) {
+            } else if(mutationType.equals("DeleteMutation")) {
                 byte[] payload = AvroSchemaUtils.getAvroPayload(bytes);
                 try {
                     DeleteMutation deleteMutation = AvroSchemaUtils.deserializeDeleteMutation(payload);
@@ -152,7 +152,7 @@ public class AvroMyPipeTestingScheme implements Scheme {
                     e.printStackTrace();
                 }
 
-            }*/
+            }
             
             return values;
         }
