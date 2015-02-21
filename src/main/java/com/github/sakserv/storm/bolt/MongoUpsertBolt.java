@@ -70,13 +70,22 @@ public abstract class MongoUpsertBolt extends BaseRichBolt {
             DBObject dbObject = getDBObjectForInput(input);
             if (dbObject != null) {
                 try {
+                    String mutationType = input.getValueByField("mutation").toString();
                     Integer idVal = (int) input.getValueByField("id");
-                    mongoDB.getCollection(collectionName).update(
-                            new BasicDBObject("_id", idVal),
-                            new BasicDBObject("$set", dbObject),
-                            true, false,
-                            new WriteConcern(1));
-                    collector.ack(input);
+                    
+                    if (mutationType.equals("DeleteMutation")) {
+                        mongoDB.getCollection(collectionName).remove(
+                                new BasicDBObject("_id", idVal)
+                        );
+                    } else {
+                        // Insert or update
+                        mongoDB.getCollection(collectionName).update(
+                                new BasicDBObject("_id", idVal),
+                                new BasicDBObject("$set", dbObject),
+                                true, false,
+                                new WriteConcern(1));
+                        collector.ack(input);
+                    }
                 } catch (MongoException me) {
                     collector.fail(input);
                 }
