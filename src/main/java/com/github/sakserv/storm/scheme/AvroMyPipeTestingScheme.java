@@ -46,6 +46,7 @@ public class AvroMyPipeTestingScheme implements Scheme {
             Values values = new Values();
             
             String mutationType = AvroSchemaUtils.getMutationType(bytes);
+            String firstName = "";
             if(mutationType.equals("InsertMutation")) {
                 byte[] payload = AvroSchemaUtils.getAvroPayload(bytes);
                 try {
@@ -53,7 +54,8 @@ public class AvroMyPipeTestingScheme implements Scheme {
                     
                     // FirstName
                     fieldsList.add("firstname");
-                    values.add(AvroSchemaUtils.getStringValueByKey(insertMutation.getStrings(), "firstname"));
+                    /*values.add(AvroSchemaUtils.getStringValueByKey(insertMutation.getStrings(), "firstname"));*/
+                    firstName = AvroSchemaUtils.getStringValueByKey(insertMutation.getStrings(), "firstname");
                     
                 } catch(IOException e) {
                     e.printStackTrace();
@@ -61,11 +63,11 @@ public class AvroMyPipeTestingScheme implements Scheme {
 
             }
 
-            return values;
+            return new Values(firstName);
         }
 
         @Override
             public Fields getOutputFields() {
-            return new Fields(fieldsList);
+            return new Fields("firstName");
         }
 }
