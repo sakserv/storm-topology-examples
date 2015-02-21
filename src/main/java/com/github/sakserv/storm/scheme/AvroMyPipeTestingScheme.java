@@ -62,16 +62,16 @@ public class AvroMyPipeTestingScheme implements Scheme {
             }*/
             
             values.add("henry");
-            fieldsList.add("firstname");
+            //fieldsList.add("firstname");
             
             values.add("smith");
-            fieldsList.add("lastname");
+            //fieldsList.add("lastname");
 
             return values;
         }
 
         @Override
             public Fields getOutputFields() {
-            return new Fields(fieldsList);
+            return new Fields("firstname", "lastname");
         }
 }
