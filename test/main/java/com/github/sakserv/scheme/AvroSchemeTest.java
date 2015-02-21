@@ -25,8 +25,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 public class AvroSchemeTest {
 
@@ -45,13 +47,23 @@ public class AvroSchemeTest {
             String deserializedValue = "";
             try {
                 
+                ByteBuffer bb = ByteBuffer.wrap(byteArray);
+
                 Schema schema = new Schema.Parser().parse(getClass().getClassLoader().getResourceAsStream("InsertMutation.avsc"));
                 LOG.info("SCHEMA: " + schema.toString(true));
 
                 GenericDatumReader<Object> reader =
                         new GenericDatumReader<Object>(schema);
                 
-                Decoder decoder = DecoderFactory.get().binaryDecoder(byteArray, null);
+                int length = bb.limit() - bb.position();
+                byte[] avroSerialized = new byte[length];
+                //byte[] copy = new byte[bb.limit() - bb.position()];
+                System.arraycopy(bb.array(), bb.position(), avroSerialized, 0, length);
+
+/*                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                byteArrayOutputStream.write(bb.array());*/
+                
+                Decoder decoder = DecoderFactory.get().binaryDecoder(avroSerialized, null);
                 Object datum = reader.read(null, decoder);
 
                 LOG.info("STRINGS: " + datum.toString());
