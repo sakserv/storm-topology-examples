@@ -14,6 +14,7 @@
 package com.github.sakserv.scheme;
 
 import com.github.sakserv.avro.AvroSchemaUtils;
+import com.github.sakserv.avro.InsertMutation;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
@@ -40,9 +41,9 @@ public class AvroSchemeTest {
     
 
             try {
-                SpecificDatumReader<AvroSchemaUtils.InsertMutation> reader = new SpecificDatumReader<>(AvroSchemaUtils.InsertMutation.getClassSchema());
+                SpecificDatumReader<InsertMutation> reader = new SpecificDatumReader<>(InsertMutation.getClassSchema());
                 Decoder decoder = DecoderFactory.get().binaryDecoder(byteArray, null);
-                AvroSchemaUtils.InsertMutation insertMutation = reader.read(null, decoder);
+                InsertMutation insertMutation = reader.read(null, decoder);
 
                 LOG.info("ENTRY: " + insertMutation.toString());
                 

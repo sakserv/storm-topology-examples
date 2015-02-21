@@ -18,6 +18,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.github.sakserv.avro.AvroSchemaUtils;
 import com.github.sakserv.avro.DeleteMutation;
+import com.github.sakserv.avro.InsertMutation;
 import com.github.sakserv.avro.UpdateMutation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ public class AvroMyPipeTestingScheme implements Scheme {
             if(mutationType.equals("InsertMutation")) {
                 byte[] payload = AvroSchemaUtils.getAvroPayload(bytes);
                 try {
-                    AvroSchemaUtils.InsertMutation insertMutation = AvroSchemaUtils.deserializeInsertMutation(payload);
+                    InsertMutation insertMutation = AvroSchemaUtils.deserializeInsertMutation(payload);
                     
                     // Database
                     values.add(insertMutation.getDatabase());
