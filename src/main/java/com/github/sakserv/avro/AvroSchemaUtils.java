@@ -19,6 +19,7 @@ import org.apache.avro.specific.SpecificDatumReader;
 import mypipe.avro.InsertMutation;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class AvroSchemaUtils {
     
@@ -38,6 +39,24 @@ public class AvroSchemaUtils {
         Decoder decoder = DecoderFactory.get().binaryDecoder(bytes, null);
         InsertMutation insertMutation = reader.read(null, decoder);
         return insertMutation.toString();
+    }
+
+    public Integer getIntegerValueByKey(Map<CharSequence, Integer> map, String key) {
+        for(Map.Entry<CharSequence, Integer> entry: map.entrySet()) {
+            if (entry.getKey().toString().equals(key)) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
+    public String getStringValueByKey(Map<CharSequence, CharSequence> map, String key) {
+        for(Map.Entry<CharSequence, CharSequence> entry: map.entrySet()) {
+            if (entry.getKey().toString().equals(key)) {
+                return entry.getValue().toString();
+            }
+        }
+        return null;
     }
     
 }

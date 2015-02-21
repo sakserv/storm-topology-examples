@@ -40,8 +40,7 @@ public class AvroScheme implements Scheme {
         @Override
         public List<Object> deserialize(byte[] bytes) {
             
-            String msg = Arrays.toString(bytes);
- /*           // magic version byte and mutation type id
+            // magic version byte and mutation type id
             String protocolVersion = Byte.toString(bytes[0]);
             String mutationTypeIdx = Byte.toString(bytes[1]);
             String mutationType = "";
@@ -51,7 +50,7 @@ public class AvroScheme implements Scheme {
                 case "3":   mutationType = "delete"; break;
             }
             
-            // Remove first two bytes
+/*            // Remove first two bytes
             byte[] schemaIdByteArray = Arrays.copyOfRange(bytes, 2, 4);
 
             // TODO: Find out if all schemaIds are a short with val 0
@@ -59,33 +58,23 @@ public class AvroScheme implements Scheme {
             bb.order(ByteOrder.LITTLE_ENDIAN);
             bb.put(newByteArray[0]);
             bb.put(newByteArray[1]);
-            short schemaId = bb.getShort(0);*//*
+            short schemaId = bb.getShort(0);*/
 
             // Get the payload bytes
-            byte[] payloadByteArray = Arrays.copyOfRange(bytes, 4, bytes.length - 1);
+            byte[] payloadByteArray = Arrays.copyOfRange(bytes, 4, bytes.length);
             
-            // deserialize the payload using the appropriate avro schema
             String deserializedValue = "";
-*//*            try {
-                deserializedValue = AvroSchemaUtils.deserializeInsertMutation(payloadByteArray);
-            } catch (IOException e) {
-                LOG.info("ERROR: Failed to deserialize avro byte array for InsertMutation");
-                deserializedValue = e.getMessage();
-            }*//*
-            //String deserializedValue = Arrays.toString(payloadByteArray);
             try {
                 deserializedValue = new String(payloadByteArray, "UTF-8");
             } catch(UnsupportedEncodingException e) {
                 deserializedValue = "exception";
             }
-                      */
-            //return new Values(protocolVersion, mutationType, deserializedValue);
-            return new Values(msg);
+                      
+            return new Values(protocolVersion, mutationType, deserializedValue);
         }
 
         @Override
             public Fields getOutputFields() {
-            //return new Fields("version", "type", "deserializedValue");
-            return new Fields("msg");
+            return new Fields("version", "type", "deserializedValue");
         }
 }
