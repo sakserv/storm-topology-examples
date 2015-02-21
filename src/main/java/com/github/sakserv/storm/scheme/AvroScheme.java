@@ -62,14 +62,8 @@ public class AvroScheme implements Scheme {
 
             // Get the payload bytes
             byte[] payloadByteArray = Arrays.copyOfRange(bytes, 4, bytes.length);
+            String deserializedValue = Arrays.toString(payloadByteArray);
             
-            String deserializedValue = "";
-            try {
-                deserializedValue = new String(payloadByteArray, "UTF-8");
-            } catch(UnsupportedEncodingException e) {
-                deserializedValue = "exception";
-            }
-                      
             return new Values(protocolVersion, mutationType, deserializedValue);
         }
 
