@@ -49,6 +49,12 @@ public class AvroMyPipeTestingScheme implements Scheme {
                 try {
                     InsertMutation insertMutation = AvroSchemaUtils.deserializeInsertMutation(payload);
                     
+                    // Database
+                    values.add(insertMutation.getDatabase());
+                    
+                    // Tables
+                    values.add(insertMutation.getTable());
+                    
                     // Id
                     values.add(AvroSchemaUtils.getIntegerValueByKey(insertMutation.getIntegers(), "id"));
                     
@@ -57,6 +63,15 @@ public class AvroMyPipeTestingScheme implements Scheme {
 
                     // LastName
                     values.add(AvroSchemaUtils.getStringValueByKey(insertMutation.getStrings(), "lastname"));
+
+                    // subject
+                    values.add(AvroSchemaUtils.getStringValueByKey(insertMutation.getStrings(), "subject"));
+
+                    // score
+                    values.add(AvroSchemaUtils.getIntegerValueByKey(insertMutation.getIntegers(), "score"));
+
+                    // date
+                    values.add(AvroSchemaUtils.getStringValueByKey(insertMutation.getStrings(), "date"));
                     
                 } catch(IOException e) {
                     e.printStackTrace();
@@ -69,6 +84,6 @@ public class AvroMyPipeTestingScheme implements Scheme {
 
         @Override
         public Fields getOutputFields() {
-            return new Fields("id", "firstname", "lastname");
+            return new Fields("database", "table", "id", "firstname", "lastname", "subject", "score", "date");
         }
 }
