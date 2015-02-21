@@ -50,10 +50,10 @@ public class AvroMyPipeTestingScheme implements Scheme {
                     InsertMutation insertMutation = AvroSchemaUtils.deserializeInsertMutation(payload);
                     
                     // Database
-                    values.add(insertMutation.getDatabase());
+                    values.add(insertMutation.getDatabase().toString());
                     
                     // Tables
-                    values.add(insertMutation.getTable());
+                    values.add(insertMutation.getTable().toString());
                     
                     // Mutation
                     values.add(mutationType);
@@ -86,10 +86,10 @@ public class AvroMyPipeTestingScheme implements Scheme {
                     DeleteMutation deleteMutation = AvroSchemaUtils.deserializeDeleteMutation(payload);
 
                     // Database
-                    values.add(deleteMutation.getDatabase());
+                    values.add(deleteMutation.getDatabase().toString());
 
                     // Tables
-                    values.add(deleteMutation.getTable());
+                    values.add(deleteMutation.getTable().toString());
 
                     // Mutation
                     values.add(mutationType);
@@ -122,10 +122,10 @@ public class AvroMyPipeTestingScheme implements Scheme {
                     UpdateMutation updateMutation = AvroSchemaUtils.deserializeUpdateMutation(payload);
 
                     // Database
-                    values.add(updateMutation.getDatabase());
+                    values.add(updateMutation.getDatabase().toString());
 
                     // Tables
-                    values.add(updateMutation.getTable());
+                    values.add(updateMutation.getTable().toString());
 
                     // Mutation
                     values.add(mutationType);
