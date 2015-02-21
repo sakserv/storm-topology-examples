@@ -71,7 +71,7 @@ public abstract class MongoUpsertBolt extends BaseRichBolt {
             if (dbObject != null) {
                 try {
                     String mutationType = input.getValueByField("mutation").toString();
-                    Integer idVal = (int) input.getValueByField("id");
+                    Integer idVal = (int) input.getValueByField("_id");
                     
                     if (mutationType.equals("DeleteMutation")) {
                         mongoDB.getCollection(collectionName).remove(
