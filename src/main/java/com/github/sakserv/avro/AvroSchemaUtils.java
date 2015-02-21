@@ -16,6 +16,7 @@ package com.github.sakserv.avro;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
+import mypipe.avro.InsertMutation;
 
 import java.io.IOException;
 
@@ -32,7 +33,7 @@ public class AvroSchemaUtils {
     }
     
     public static String deserializeInsertMutation(byte[] bytes) throws IOException {
-        SpecificDatumReader<InsertMutation> reader = 
+        SpecificDatumReader<InsertMutation> reader =
                 new SpecificDatumReader<InsertMutation>(InsertMutation.getClassSchema());
         Decoder decoder = DecoderFactory.get().binaryDecoder(bytes, null);
         InsertMutation insertMutation = reader.read(null, decoder);

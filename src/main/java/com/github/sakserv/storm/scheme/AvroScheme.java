@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -62,15 +63,20 @@ public class AvroScheme implements Scheme {
             // Get the payload bytes
             byte[] payloadByteArray = Arrays.copyOfRange(bytes, 4, bytes.length - 1);
             
-/*            // deserialize the payload using the appropriate avro schema
+            // deserialize the payload using the appropriate avro schema
             String deserializedValue = "";
-            try {
+/*            try {
                 deserializedValue = AvroSchemaUtils.deserializeInsertMutation(payloadByteArray);
             } catch (IOException e) {
                 LOG.info("ERROR: Failed to deserialize avro byte array for InsertMutation");
                 deserializedValue = e.getMessage();
             }*/
-            String deserializedValue = Arrays.toString(payloadByteArray);
+            //String deserializedValue = Arrays.toString(payloadByteArray);
+            try {
+                deserializedValue = new String(payloadByteArray, "UTF-8");
+            } catch(UnsupportedEncodingException e) {
+                deserializedValue = "exception";
+            }
                       
             return new Values(protocolVersion, mutationType, deserializedValue);
         }
