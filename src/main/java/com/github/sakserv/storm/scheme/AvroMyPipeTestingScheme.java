@@ -33,8 +33,6 @@ public class AvroMyPipeTestingScheme implements Scheme {
 
     private static final long serialVersionUID = -2990121166902741545L;
     
-    private List<String> fieldsList = new ArrayList<String>();
-    
         // 1 byte - magic for version
         // 1 byte - mutation id
         // n bytes - schemaid (this appears to always be a short with a val of 0)
@@ -45,33 +43,32 @@ public class AvroMyPipeTestingScheme implements Scheme {
             
             Values values = new Values();
             
-           /* String mutationType = AvroSchemaUtils.getMutationType(bytes);
+            String mutationType = AvroSchemaUtils.getMutationType(bytes);
             if(mutationType.equals("InsertMutation")) {
                 byte[] payload = AvroSchemaUtils.getAvroPayload(bytes);
                 try {
                     InsertMutation insertMutation = AvroSchemaUtils.deserializeInsertMutation(payload);
                     
+                    // Id
+                    values.add(AvroSchemaUtils.getIntegerValueByKey(insertMutation.getIntegers(), "id"));
+                    
                     // FirstName
-                    fieldsList.add("firstname");
                     values.add(AvroSchemaUtils.getStringValueByKey(insertMutation.getStrings(), "firstname"));
+
+                    // LastName
+                    values.add(AvroSchemaUtils.getStringValueByKey(insertMutation.getStrings(), "lastname"));
                     
                 } catch(IOException e) {
                     e.printStackTrace();
                 }
 
-            }*/
+            }
             
-            values.add("henry");
-            fieldsList.add("firstname");
-            
-            values.add("smith");
-            fieldsList.add("lastname");
-
             return values;
         }
 
         @Override
         public Fields getOutputFields() {
-            return new Fields(fieldsList);
+            return new Fields("id", "firstname", "lastname");
         }
 }
