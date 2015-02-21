@@ -159,6 +159,6 @@ public class AvroMyPipeTestingScheme implements Scheme {
 
         @Override
         public Fields getOutputFields() {
-            return new Fields("database", "table", "mutation", "id", "firstname", "lastname", "subject", "score", "date");
+            return new Fields("database", "table", "mutation", "_id", "firstname", "lastname", "subject", "score", "date");
         }
 }
