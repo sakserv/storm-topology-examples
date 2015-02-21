@@ -1,5 +1,5 @@
 {
-  "namespace": "mypipe.avro",
+  "namespace": "com.github.sakserv.avro",
   "type": "record",
   "name": "InsertMutation",
   "fields": [

@@ -17,13 +17,12 @@ import backtype.storm.spout.Scheme;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.github.sakserv.avro.AvroSchemaUtils;
-import mypipe.avro.InsertMutation;
+import com.github.sakserv.avro.DeleteMutation;
+import com.github.sakserv.avro.UpdateMutation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class AvroMyPipeTestingScheme implements Scheme {
@@ -47,13 +46,16 @@ public class AvroMyPipeTestingScheme implements Scheme {
             if(mutationType.equals("InsertMutation")) {
                 byte[] payload = AvroSchemaUtils.getAvroPayload(bytes);
                 try {
-                    InsertMutation insertMutation = AvroSchemaUtils.deserializeInsertMutation(payload);
+                    AvroSchemaUtils.InsertMutation insertMutation = AvroSchemaUtils.deserializeInsertMutation(payload);
                     
                     // Database
                     values.add(insertMutation.getDatabase());
                     
                     // Tables
                     values.add(insertMutation.getTable());
+                    
+                    // Mutation
+                    values.add(mutationType);
                     
                     // Id
                     values.add(AvroSchemaUtils.getIntegerValueByKey(insertMutation.getIntegers(), "id"));
@@ -77,13 +79,85 @@ public class AvroMyPipeTestingScheme implements Scheme {
                     e.printStackTrace();
                 }
 
-            }
+            } /*else if(mutationType.equals("DeleteMutation")) {
+                byte[] payload = AvroSchemaUtils.getAvroPayload(bytes);
+                try {
+                    DeleteMutation deleteMutation = AvroSchemaUtils.deserializeDeleteMutation(payload);
+
+                    // Database
+                    values.add(deleteMutation.getDatabase());
+
+                    // Tables
+                    values.add(deleteMutation.getTable());
+
+                    // Mutation
+                    values.add(mutationType);
+
+                    // Id
+                    values.add(AvroSchemaUtils.getIntegerValueByKey(deleteMutation.getIntegers(), "id"));
+
+                    // FirstName
+                    values.add(AvroSchemaUtils.getStringValueByKey(deleteMutation.getStrings(), "firstname"));
+
+                    // LastName
+                    values.add(AvroSchemaUtils.getStringValueByKey(deleteMutation.getStrings(), "lastname"));
+
+                    // subject
+                    values.add(AvroSchemaUtils.getStringValueByKey(deleteMutation.getStrings(), "subject"));
+
+                    // score
+                    values.add(AvroSchemaUtils.getIntegerValueByKey(deleteMutation.getIntegers(), "score"));
+
+                    // date
+                    values.add(AvroSchemaUtils.getStringValueByKey(deleteMutation.getStrings(), "date"));
+
+                } catch(IOException e) {
+                    e.printStackTrace();
+                }
+
+            } else if(mutationType.equals("UpdateMutation")) {
+                byte[] payload = AvroSchemaUtils.getAvroPayload(bytes);
+                try {
+                    UpdateMutation updateMutation = AvroSchemaUtils.deserializeUpdateMutation(payload);
+
+                    // Database
+                    values.add(updateMutation.getDatabase());
+
+                    // Tables
+                    values.add(updateMutation.getTable());
+
+                    // Mutation
+                    values.add(mutationType);
+
+                    // Id
+                    values.add(AvroSchemaUtils.getIntegerValueByKey(updateMutation.getNewIntegers(), "id"));
+
+                    // FirstName
+                    values.add(AvroSchemaUtils.getStringValueByKey(updateMutation.getNewStrings(), "firstname"));
+
+                    // LastName
+                    values.add(AvroSchemaUtils.getStringValueByKey(updateMutation.getNewStrings(), "lastname"));
+
+                    // subject
+                    values.add(AvroSchemaUtils.getStringValueByKey(updateMutation.getNewStrings(), "subject"));
+
+                    // score
+                    values.add(AvroSchemaUtils.getIntegerValueByKey(updateMutation.getNewIntegers(), "score"));
+
+                    // date
+                    values.add(AvroSchemaUtils.getStringValueByKey(updateMutation.getNewStrings(), "date"));
+
+                } catch(IOException e) {
+                    e.printStackTrace();
+                }
+
+            }*/
             
             return values;
         }
 
         @Override
         public Fields getOutputFields() {
-            return new Fields("database", "table", "id", "firstname", "lastname", "subject", "score", "date");
+            return new Fields("database", "table", "mutation", "id", "firstname", "lastname", "subject", "score", "date");
         }
 }

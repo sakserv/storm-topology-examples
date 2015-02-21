@@ -14,11 +14,6 @@
 package com.github.sakserv.scheme;
 
 import com.github.sakserv.avro.AvroSchemaUtils;
-import mypipe.avro.InsertMutation;
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
@@ -26,10 +21,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -48,9 +40,9 @@ public class AvroSchemeTest {
     
 
             try {
-                SpecificDatumReader<InsertMutation> reader = new SpecificDatumReader<>(InsertMutation.getClassSchema());
+                SpecificDatumReader<AvroSchemaUtils.InsertMutation> reader = new SpecificDatumReader<>(AvroSchemaUtils.InsertMutation.getClassSchema());
                 Decoder decoder = DecoderFactory.get().binaryDecoder(byteArray, null);
-                InsertMutation insertMutation = reader.read(null, decoder);
+                AvroSchemaUtils.InsertMutation insertMutation = reader.read(null, decoder);
 
                 LOG.info("ENTRY: " + insertMutation.toString());
                 
