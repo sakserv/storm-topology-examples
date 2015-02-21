@@ -19,29 +19,37 @@ import org.apache.avro.specific.SpecificDatumReader;
 import mypipe.avro.InsertMutation;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 
 public class AvroSchemaUtils {
     
-    public Class schemaClassFromString(String schemaName) {
-        Class clsName = null;
-        switch(schemaName) {
-            case "insert":  clsName = InsertMutation.class; break;
-            case "update":  clsName = UpdateMutation.class; break;
-            case "delete":  clsName =  DeleteMutation.class; break;
+    public static String getMutationType(byte[] bytes) {
+
+        String mutationTypeIdx = Byte.toString(bytes[1]);
+        String mutationType = "";
+        switch (mutationTypeIdx) {
+            case "1":   mutationType = "InsertMutation"; break;
+            case "2":   mutationType = "UpdateMutation"; break;
+            case "3":   mutationType = "DeleteMutation"; break;
         }
-        return clsName;
+        return mutationType;
     }
     
-    public static String deserializeInsertMutation(byte[] bytes) throws IOException {
+    public static byte[] getAvroPayload(byte[] bytes) {
+        return Arrays.copyOfRange(bytes, 4, bytes.length);
+    }
+    
+    public static InsertMutation deserializeInsertMutation(byte[] bytes) throws IOException {
         SpecificDatumReader<InsertMutation> reader =
                 new SpecificDatumReader<InsertMutation>(InsertMutation.getClassSchema());
         Decoder decoder = DecoderFactory.get().binaryDecoder(bytes, null);
         InsertMutation insertMutation = reader.read(null, decoder);
-        return insertMutation.toString();
+        return insertMutation;
     }
 
-    public Integer getIntegerValueByKey(Map<CharSequence, Integer> map, String key) {
+    public static Integer getIntegerValueByKey(Map<CharSequence, Integer> map, String key) {
         for(Map.Entry<CharSequence, Integer> entry: map.entrySet()) {
             if (entry.getKey().toString().equals(key)) {
                 return entry.getValue();
@@ -50,7 +58,7 @@ public class AvroSchemaUtils {
         return null;
     }
 
-    public String getStringValueByKey(Map<CharSequence, CharSequence> map, String key) {
+    public static String getStringValueByKey(Map<CharSequence, CharSequence> map, String key) {
         for(Map.Entry<CharSequence, CharSequence> entry: map.entrySet()) {
             if (entry.getKey().toString().equals(key)) {
                 return entry.getValue().toString();
