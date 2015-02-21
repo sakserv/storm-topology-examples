@@ -66,12 +66,13 @@ public abstract class MongoUpsertBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple input) {
         if (shouldActOnInput(input)) {
-            String collectionName = getMongoCollectionForInput(input);
             DBObject dbObject = getDBObjectForInput(input);
+            String collectionName = input.getValueByField("table").toString();
+            String mutationType = input.getValueByField("mutation").toString();
+            Integer idVal = (int) input.getValueByField("_id");
+            
             if (dbObject != null) {
                 try {
-                    String mutationType = input.getValueByField("mutation").toString();
-                    Integer idVal = (int) input.getValueByField("_id");
                     
                     if (mutationType.equals("DeleteMutation")) {
                         mongoDB.getCollection(collectionName).remove(
@@ -98,14 +99,6 @@ public abstract class MongoUpsertBolt extends BaseRichBolt {
      * @return {@code true} iff this input tuple should trigger a Mongo write
      */
     public abstract boolean shouldActOnInput(Tuple input);
-
-    /**
-     * Returns the Mongo collection which the input tuple should be written to.
-     *
-     * @param input the input tuple under consideration
-     * @return the Mongo collection which the input tuple should be written to
-     */
-    public abstract String getMongoCollectionForInput(Tuple input);
 
     /**
      * Returns the DBObject to store in Mongo for the specified input tuple.

@@ -51,7 +51,6 @@ public class KafkaMongoUpsertTopology {
                 propertyParser.getProperty(ConfigVars.MONGO_IP_KEY),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.MONGO_PORT_KEY)),
                 propertyParser.getProperty(ConfigVars.MONGO_DATABASE_NAME_KEY),
-                propertyParser.getProperty(ConfigVars.MONGO_COLLECTION_NAME_KEY),
                 Integer.parseInt(propertyParser.getProperty(ConfigVars.MONGO_BOLT_PARALLELISM_KEY)),
                 propertyParser.getProperty(ConfigVars.KAFKA_SPOUT_NAME_KEY),
                 propertyParser.getProperty(ConfigVars.MONGO_BOLT_NAME_KEY));

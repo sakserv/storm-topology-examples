@@ -28,33 +28,23 @@ import java.util.Date;
  *
  */
 public class SimpleMongoUpsertBolt extends MongoUpsertBolt {
-    private final String mongoCollectionName;
 
     /**
      * @param mongoHost The host on which Mongo is running.
      * @param mongoPort The port on which Mongo is running.
      * @param mongoDbName The Mongo database containing all collections being
      * written to.
-     * @param mongoCollectionName The Mongo collection to write to. If a
-     * collection with this name does not already exist, it will be
-     * automatically created.
      */
     public SimpleMongoUpsertBolt(
-            String mongoHost, int mongoPort, String mongoDbName, String mongoCollectionName) {
+            String mongoHost, int mongoPort, String mongoDbName) {
 
         super(mongoHost, mongoPort, mongoDbName);
-        this.mongoCollectionName = mongoCollectionName;
     }
 
 
     @Override
     public boolean shouldActOnInput(Tuple input) {
         return true;
-    }
-
-    @Override
-    public String getMongoCollectionForInput(Tuple input) {
-        return mongoCollectionName;
     }
 
     @Override

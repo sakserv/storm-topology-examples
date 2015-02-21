@@ -34,11 +34,11 @@ public class ConfigureMongodbBolt {
     }
 
     public static void configureMongodbUpsertBolt(TopologyBuilder builder, String mongodbHost, int mongodbPort,
-                                            String mongodbDB, String mongodbCollection, int parallelismHint,
+                                            String mongodbDB, int parallelismHint,
                                             String sourceName, String boltName) {
 
         LOG.info("MONGOBOLT: Configuring the MongoBolt");
-        SimpleMongoUpsertBolt bolt = new SimpleMongoUpsertBolt(mongodbHost, mongodbPort, mongodbDB, mongodbCollection);
+        SimpleMongoUpsertBolt bolt = new SimpleMongoUpsertBolt(mongodbHost, mongodbPort, mongodbDB);
         builder.setBolt(boltName, bolt, parallelismHint).shuffleGrouping(sourceName);
 
     }
