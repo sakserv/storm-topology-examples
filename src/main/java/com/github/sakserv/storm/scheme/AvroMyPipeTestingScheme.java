@@ -43,7 +43,7 @@ public class AvroMyPipeTestingScheme implements Scheme {
         @Override
         public List<Object> deserialize(byte[] bytes) {
             
-            Values values = new Values();
+            //Values values = new Values();
             
            /* String mutationType = AvroSchemaUtils.getMutationType(bytes);
             if(mutationType.equals("InsertMutation")) {
@@ -61,13 +61,13 @@ public class AvroMyPipeTestingScheme implements Scheme {
 
             }*/
             
-            values.add("henry");
+            //values.add("henry");
             //fieldsList.add("firstname");
             
-            values.add("smith");
+            //values.add("smith");
             //fieldsList.add("lastname");
 
-            return values;
+            return new Values("henry", "smith");
         }
 
         @Override
