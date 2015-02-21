@@ -79,11 +79,7 @@ public abstract class MongoUpsertBolt extends BaseRichBolt {
                         );
                     } else {
                         // Insert or update
-                        mongoDB.getCollection(collectionName).update(
-                                new BasicDBObject("_id", idVal),
-                                new BasicDBObject("$set", dbObject),
-                                true, false,
-                                new WriteConcern(1));
+                        mongoDB.getCollection(collectionName).save(dbObject, new WriteConcern(1));
                         collector.ack(input);
                     }
                 } catch (MongoException me) {
