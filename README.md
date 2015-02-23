@@ -30,12 +30,12 @@ cd /tmp/storm-topology-examples && bash -x bin/build.sh
 
 * If using the MongoBolt, install MongoDB
 ```
-cd /tmp/storm-topology-examples.git && bash -x bin/install_mongo.sh
+cd /tmp/storm-topology-examples && bash -x bin/install_mongodb.sh
 ```
 
 * If using the HiveBolt, create the table (you likely want to modify the ddl)
 ```
-cd /tmp/storm-topology-examples.git && bash -x bin/create_orc_table.sh [/path/to/create_orc_table.sql]
+cd /tmp/storm-topology-examples && bash -x bin/create_orc_table.sh [/path/to/create_orc_table.sql]
 ```
 
 * Create the Kafka topic (if auto creation of topics is disabled)

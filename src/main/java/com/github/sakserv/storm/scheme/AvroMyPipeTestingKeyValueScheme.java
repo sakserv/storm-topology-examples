@@ -14,11 +14,35 @@
 package com.github.sakserv.storm.scheme;
 
 import backtype.storm.spout.MultiScheme;
+import backtype.storm.spout.Scheme;
 import backtype.storm.spout.SchemeAsMultiScheme;
+import com.github.sakserv.avro.AvroSchemaUtils;
+import com.github.sakserv.avro.InsertMutation;
+import scala.actors.threadpool.Arrays;
 import storm.kafka.KeyValueScheme;
 import storm.kafka.KeyValueSchemeAsMultiScheme;
 
+import java.io.IOException;
+import java.util.List;
+
 public class AvroMyPipeTestingKeyValueScheme extends SchemeAsMultiScheme {
+    
+    //private static byte[] key = new byte[];
+    
+/*    @Override
+    public Iterable<List<Object>> deserialize(byte[] bytes) {
+        String mutationType = AvroSchemaUtils.getMutationType(bytes);
+        byte[] payload = AvroSchemaUtils.getAvroPayload(bytes);
+        
+        if(mutationType.equals("InsertMutation")) {
+            try {
+                InsertMutation insertMutation = AvroSchemaUtils.deserializeInsertMutation(payload);
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return Arrays.asList(new String[]);
+    }*/
     
     public AvroMyPipeTestingKeyValueScheme(KeyValueScheme scheme) {
         super(scheme);
