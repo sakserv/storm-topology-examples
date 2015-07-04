@@ -67,7 +67,7 @@ public class KafkaHiveHdfsTopologyTest {
     private HiveLocalServer2 hiveLocalServer2;
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
 
         // Parse the properties file
         propertyParser = new PropertyParser();
@@ -135,12 +135,13 @@ public class KafkaHiveHdfsTopologyTest {
                 .setZookeeperPort(Long.parseLong(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)))
                 .setEnableDebug(Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG_KEY)))
                 .setNumWorkers(Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS_KEY)))
+                .setStormConfig(new Config())
                 .build();
         stormLocalCluster.start();
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
 
         // Stop Storm
         try {
@@ -258,7 +259,7 @@ public class KafkaHiveHdfsTopologyTest {
         assertTrue(msgCountHigh >= count);
     }
 
-    public void createTmpHive() throws IOException {
+    public void createTmpHive() throws Exception {
         String sessionPath = propertyParser.getProperty(ConfigVars.HIVE_TEST_HDFS_SESSION_PATH_KEY);
         LOG.info("HDFS: Creating " + sessionPath + " locally and on HDFS");
         
@@ -288,7 +289,7 @@ public class KafkaHiveHdfsTopologyTest {
         Files.setPosixFilePermissions(Paths.get(sessionPath), perms);*/
     }
 
-    public void validateHdfsResults() throws IOException {
+    public void validateHdfsResults() throws Exception {
         LOG.info("HDFS: VALIDATING");
         
         // Get the filesystem handle and a list of files written by the test
@@ -371,7 +372,7 @@ public class KafkaHiveHdfsTopologyTest {
     }
 
     @Test
-    public void testKafkaHiveHdfsTopology() throws TException, JSONException, ClassNotFoundException, SQLException, IOException {
+    public void testKafkaHiveHdfsTopology() throws Exception {
         
         // Need to manually create /tmp/hive locally and on HDFS for hive session state data
         createTmpHive();

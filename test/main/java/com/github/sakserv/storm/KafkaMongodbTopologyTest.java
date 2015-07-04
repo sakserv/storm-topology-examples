@@ -48,7 +48,7 @@ public class KafkaMongodbTopologyTest {
     private StormLocalCluster stormLocalCluster;
     
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         // Parse the properties file
         propertyParser = new PropertyParser();
         propertyParser.parsePropsFile(PROP_FILE);
@@ -85,12 +85,13 @@ public class KafkaMongodbTopologyTest {
                 .setZookeeperPort(Long.parseLong(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)))
                 .setEnableDebug(Boolean.parseBoolean(propertyParser.getProperty(ConfigVars.STORM_ENABLE_DEBUG_KEY)))
                 .setNumWorkers(Integer.parseInt(propertyParser.getProperty(ConfigVars.STORM_NUM_WORKERS_KEY)))
+                .setStormConfig(new Config())
                 .build();
         stormLocalCluster.start();
     }
     
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         // Stop Storm
         try {
             stormLocalCluster.stop(propertyParser.getProperty(ConfigVars.STORM_TOPOLOGY_NAME_KEY));

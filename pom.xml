@@ -9,7 +9,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <hadoop-mini-clusters.version>0.0.12</hadoop-mini-clusters.version>
+        <hadoop-mini-clusters.version>0.0.13</hadoop-mini-clusters.version>
         <regex-tester.version>0.1</regex-tester.version>
         <slf4j.version>1.7.10</slf4j.version>
         <junit.version>4.11</junit.version>
